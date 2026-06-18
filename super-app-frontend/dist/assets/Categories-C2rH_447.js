@@ -1,0 +1,1 @@
+import{o as t}from"./index-e0GbgWzi.js";import o from"./Products-BH30PYxk.js";import"./ecommerceStore-D8kw8uxm.js";import"./Loader-F-91Vwzk.js";import"./formatters-LFKHB4_r.js";import"./shopping-cart-Bf0B3ggi.js";const a=()=>t.jsx(o,{});export{a as default};
