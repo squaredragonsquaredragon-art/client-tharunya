@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
-from app.dependencies import get_admin_user
+from app.dependencies import get_admin_user, get_super_admin_user
 from app.models.user_model import User
 from app.services.admin_service import AdminService
 from app.schemas.user_schema import UserAdminUpdate
@@ -9,19 +9,19 @@ from app.schemas.user_schema import UserAdminUpdate
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
-@router.get("/users/", summary="List all users (admin)")
+@router.get("/users/", summary="List all users (super admin)")
 async def list_users(
-    admin: User = Depends(get_admin_user),
+    admin: User = Depends(get_super_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     return await AdminService(db).get_all_users()
 
 
-@router.patch("/users/{user_id}/", summary="Update any user (admin)")
+@router.patch("/users/{user_id}/", summary="Update any user (super admin)")
 async def update_user(
     user_id: str,
     data: UserAdminUpdate,
-    admin: User = Depends(get_admin_user),
+    admin: User = Depends(get_super_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     return await AdminService(db).update_user(user_id, data)

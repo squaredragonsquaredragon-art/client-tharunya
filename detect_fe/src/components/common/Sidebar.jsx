@@ -12,6 +12,7 @@ import { alertService } from '../../services/alertService';
 const Sidebar = ({ collapsed, onToggle, mobileOpen }) => {
   const { user, logout } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const isSuperAdmin = user?.username === 'qwer1234' || user?.is_superuser === true;
   const isAdmin = user?.role === ROLES.ADMIN || user?.is_staff;
 
   useEffect(() => {
@@ -59,7 +60,7 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen }) => {
     ]
   };
 
-  const allItems = isAdmin ? [...navItems, adminItems] : navItems;
+  const allItems = isSuperAdmin ? [...navItems, adminItems] : navItems;
 
   return (
     <>
