@@ -215,7 +215,7 @@ const Home = () => {
             </div>
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800 }}>MFA Risk Bulletins</h3>
             <p style={{ fontSize: '12px', color: 'hsl(var(--text-secondary))', lineHeight: 1.6, margin: 0 }}>
-              Anomalous login scoring is live. Sentinel triggers instant email alert reports and requests OTP blocks if threat thresholds exceed 75/100 points.
+              Anomalous login scoring is live. Sentinel triggers instant alert reports and security blocks if threat thresholds exceed 75/100 points.
             </p>
           </div>
 

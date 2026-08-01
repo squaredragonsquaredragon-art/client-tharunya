@@ -442,11 +442,6 @@ a {
   border: 1px solid rgba(59, 130, 246, 0.25);
 }
 
-.badge-otp {
-  background: rgba(139, 92, 246, 0.12);
-  color: var(--clr-accent-purple);
-  border: 1px solid rgba(139, 92, 246, 0.25);
-}
 
 .badge-dot {
   width: 6px;

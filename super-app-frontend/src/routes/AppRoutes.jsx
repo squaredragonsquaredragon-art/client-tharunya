@@ -15,7 +15,6 @@ import AdminRoute from './AdminRoute';
 const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
 const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
-const OTPVerification = lazy(() => import('../pages/auth/OTPVerification'));
 const SuspiciousLogin = lazy(() => import('../pages/auth/SuspiciousLogin'));
 const BootSelector = lazy(() => import('../pages/auth/BootSelector'));
 
@@ -97,7 +96,6 @@ const AppRoutes = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/otp-verification" element={<OTPVerification />} />
           <Route path="/suspicious-login" element={<SuspiciousLogin />} />
         </Route>
       </Route>

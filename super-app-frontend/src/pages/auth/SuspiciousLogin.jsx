@@ -61,17 +61,8 @@ const SuspiciousLogin = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <button
-          onClick={() => navigate('/otp-verification')}
-          className="btn btn-premium"
-          style={{ width: '100%' }}
-        >
-          <ShieldCheck size={16} />
-          Challenge Anomaly (MFA)
-        </button>
-        
-        <button
           onClick={() => navigate('/login')}
-          className="btn btn-secondary"
+          className="btn btn-premium"
           style={{ width: '100%' }}
         >
           Return to Authentication

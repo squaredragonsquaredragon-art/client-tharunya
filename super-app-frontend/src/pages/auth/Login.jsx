@@ -43,9 +43,7 @@ const Login = () => {
     } else {
       addToast(res.error, 'error');
       
-      if (res.details?.mfa_required) {
-        navigate('/otp-verification');
-      } else if (res.details?.status === 'suspicious') {
+      if (res.details?.status === 'suspicious') {
         navigate('/suspicious-login');
       }
     }

@@ -49,10 +49,6 @@ class LoginRepository:
             conditions.append(LoginLog.source_app == source_app)
         if event_type and event_type != "all":
             conditions.append(LoginLog.event_type == event_type)
-            
-        if not for_super_admin:
-            # Regular admin can ONLY see logs where username is 'admin'
-            conditions.append(LoginLog.username == 'admin')
 
         where_clause = and_(*conditions) if conditions else True
         count_q = await self.db.execute(select(func.count()).where(where_clause))
@@ -135,11 +131,13 @@ class LoginRepository:
         return list(result.scalars().all())
 
     async def count_recent_failed(self, ip: str, minutes: int = 15) -> int:
+        """Count failed/blocked login attempts from this IP in the last N minutes."""
         since = datetime.now(timezone.utc) - timedelta(minutes=minutes)
         result = await self.db.execute(
             select(func.count()).where(
                 LoginLog.ip_address == ip,
-                LoginLog.status == "blocked",
+                # Count both 'failed' event_type AND 'blocked' status entries
+                (LoginLog.event_type == "failed") | (LoginLog.status == "blocked"),
                 LoginLog.login_time >= since
             )
         )
@@ -153,7 +151,37 @@ class LoginRepository:
             .order_by(desc(LoginLog.login_time))
             .limit(limit)
         )
-        return [r[0] for r in result.fetchall()]
+        return [r[0] for r in result.fetchall() if r[0]]
+
+    async def get_recent_browsers(self, user_id: str | list[str], limit: int = 10) -> list[str]:
+        """Return distinct browser strings from recent successful logins."""
+        cond = self._user_cond(user_id)
+        result = await self.db.execute(
+            select(LoginLog.browser)
+            .where(cond, LoginLog.event_type == "login", LoginLog.status == "normal")
+            .order_by(desc(LoginLog.login_time))
+            .limit(limit)
+        )
+        return [r[0] for r in result.fetchall() if r[0]]
+
+    async def get_recent_devices(self, user_id: str | list[str], limit: int = 10) -> list[str]:
+        """Return distinct device/OS strings from recent successful logins."""
+        cond = self._user_cond(user_id)
+        result = await self.db.execute(
+            select(LoginLog.device)
+            .where(cond, LoginLog.event_type == "login", LoginLog.status == "normal")
+            .order_by(desc(LoginLog.login_time))
+            .limit(limit)
+        )
+        return [r[0] for r in result.fetchall() if r[0]]
+
+    async def count_user_logins(self, user_id: str | list[str]) -> int:
+        """Count total successful logins for this user (used to detect first-ever login)."""
+        cond = self._user_cond(user_id)
+        result = await self.db.execute(
+            select(func.count()).where(cond, LoginLog.event_type == "login")
+        )
+        return result.scalar_one()
 
     async def delete_logs(
         self,

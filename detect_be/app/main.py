@@ -8,7 +8,7 @@ from app.utils.logger import get_logger
 from app.routers import auth_router, login_router, alert_router, user_router, admin_router
 
 # Import all models so SQLAlchemy sees them before create_all
-from app.models import user_model, login_log_model, suspicious_log_model, otp_alert_model, app_users  # noqa
+from app.models import user_model, login_log_model, suspicious_log_model, app_users  # noqa
 
 logger = get_logger(__name__)
 
@@ -74,14 +74,28 @@ async def _seed_admin():
             qwer_admin.is_staff = True
             qwer_admin.role = "admin"
 
-        # 2. Set all non-super-admin accounts in users table to is_active = False (Pending Super Admin approval)
+        # 2. Ensure BackOffice admin accounts (non-super-admin, non-app-mirror) keep correct role/staff flags.
+        #    - App mirror users (payment_*, instagram_*) must stay role="user", is_active=True, is_staff=False
+        #    - Already-approved BackOffice admins (is_active=True) must NOT be reset to inactive
+        #    - Only set is_active=False for BackOffice admins who have NEVER been approved yet
         all_users = (await db.execute(select(User).where(User.username.notin_([super_name, "qwer1234"])))).scalars().all()
         for u in all_users:
-            u.role = "admin"
-            u.is_staff = True
-            u.is_active = False  # Mandatory Super Admin approval required!
+            is_app_mirror = u.username.startswith("payment_") or u.username.startswith("instagram_")
+            if is_app_mirror:
+                # App mirror users: always regular users, always active
+                u.role = "user"
+                u.is_staff = False
+                u.is_active = True
+            else:
+                # BackOffice admin accounts: ensure correct role/staff flags
+                # but DO NOT deactivate already-approved accounts!
+                u.role = "admin"
+                u.is_staff = True
+                # Only set inactive if this account has never been approved (is_active is still False)
+                # i.e., do NOT reset is_active for accounts that were already approved!
 
         await db.commit()
+
 
 
 app = FastAPI(

@@ -233,6 +233,7 @@ class AuthService:
             await self.db.flush()
 
             # Create mirror key reference in standard users table so standard middlewares/admin dashboard works
+            # NOTE: App mirror users are always role="user", is_active=True, is_staff=False — never admins!
             user = User(
                 id=app_user.id,
                 username=f"{app}_{data.username}",
@@ -243,6 +244,7 @@ class AuthService:
                 phone_number=data.phone_number,
                 role="user",
                 is_active=True,
+                is_staff=False,
             )
             user = await self.user_repo.create(user)
         else:
@@ -345,6 +347,32 @@ class AuthService:
                     remaining = 300 - total_sec
                     m = int(remaining // 60)
                     s = int(remaining % 60)
+                    # Log this attempt as suspicious even though account is blocked
+                    # so the security monitor can track persistent attack attempts
+                    try:
+                        _ip = self._get_ip(request)
+                        _ua = request.headers.get("user-agent", "")
+                        _dev = parse_user_agent(_ua)
+                        _loc = await resolve_exact_location(_ip)
+                        _blocked_log = LoginLog(
+                            user_id=target_user.id,
+                            username=data.username,
+                            ip_address=_ip,
+                            user_agent=_ua,
+                            browser=_dev["browser"],
+                            os=_dev["os"],
+                            device=_dev["device"],
+                            location=f"BLOCKED LOGIN ATTEMPT during lockout. Location: {_loc}",
+                            source_app=app if app != "all" else "system",
+                            event_type="failed",
+                            status="blocked",
+                            is_suspicious=True,
+                            risk_score=90.0,
+                        )
+                        await self.login_repo.create(_blocked_log)
+                        await self.db.commit()
+                    except Exception:
+                        pass
                     raise HTTPException(
                         status.HTTP_403_FORBIDDEN,
                         f"Your account is blocked due to security lockout. Try again in {m} minutes {s} seconds."
@@ -414,9 +442,12 @@ class AuthService:
         device_info = parse_user_agent(ua_string)
         ip = self._get_ip(request)
 
-        # Anomaly detection
-        recent_ips = await self.login_repo.get_recent_ips(user.id)
-        failed_count = await self.login_repo.count_recent_failed(ip)
+        # Anomaly detection — gather all contextual signals
+        recent_ips      = await self.login_repo.get_recent_ips(user.id)
+        recent_browsers = await self.login_repo.get_recent_browsers(user.id)
+        recent_devices  = await self.login_repo.get_recent_devices(user.id)
+        failed_count    = await self.login_repo.count_recent_failed(ip)
+        total_logins    = await self.login_repo.count_user_logins(user.id)
         now = datetime.now(timezone.utc)
 
         analysis = analyze_login(
@@ -427,6 +458,9 @@ class AuthService:
             login_hour=now.hour,
             recent_ips=recent_ips,
             recent_failed_count=failed_count,
+            recent_browsers=recent_browsers,
+            recent_devices=recent_devices,
+            is_first_login=(total_logins == 0),
         )
 
         status_label = "suspicious" if analysis["is_suspicious"] else "normal"
@@ -481,7 +515,7 @@ class AuthService:
                     ip_address=ip,
                     location=app,
                     risk_score=analysis["risk_score"],
-                    severity="high" if analysis["risk_score"] >= 60 else "medium",
+                    severity=analysis.get("severity", "high" if analysis["risk_score"] >= 60 else "medium"),
                     ai_analysis=ai_report,
                 )
                 await self.alert_repo.create_suspicious(alert)
@@ -650,8 +684,8 @@ class AuthService:
             elif failed_count <= 5:
                 log.location = f"Exact Location: {location_str} (Failed attempt {failed_count}/5)"
 
-            # 4. Alert Trigger Rule: Generate a suspicious alert when failed attempts exceed threshold (>3 or >5)
-            if failed_count > 3:
+            # 4. Alert Trigger Rule: Generate a suspicious alert when failed attempts hit threshold (>=3)
+            if failed_count >= 3:
                 # Check if an unread alert already exists for this user account (One Alert Per Account)
                 existing_alert = await self.db.execute(
                     select(SuspiciousLog.id)
@@ -691,54 +725,64 @@ class AuthService:
                     )
                     await self.alert_repo.create_suspicious(alert)
 
-                # 5. WhatsApp + Email Alert: Notify the target user on both channels
-                if not is_nonexistent:
-                    target_user_obj = await self.user_repo.get_by_id(user_id)
-                    if target_user_obj:
-                        is_locked = failed_count >= 6
-                        # 5a. WhatsApp alert
-                        if target_user_obj.phone_number:
-                            try:
-                                await send_whatsapp_alert(
-                                    to_phone=target_user_obj.phone_number,
-                                    username=identifier,
-                                    ip_address=ip,
-                                    location=location_str,
-                                    app_name=app.capitalize() if app != "all" else "System",
-                                    failed_count=failed_count,
-                                    is_locked=is_locked,
-                                )
-                            except Exception as wa_err:
-                                logger.error(f"WhatsApp alert dispatch error: {wa_err}")
+            # 5. WhatsApp + Email Alert: Notify target user on both channels whenever failed attempts occur
+            if not is_nonexistent and user_id:
+                target_user_obj = await self.user_repo.get_by_id(user_id)
+                if target_user_obj:
+                    is_locked = failed_count >= 6
+                    from app.models.app_users import PaymentUser, InstagramUser
+                    from sqlalchemy import select as sa_select
 
-                        # 5b. Email alert (use actual user email, not prefixed mirror email)
+                    # Resolve target phone number across User, PaymentUser, InstagramUser
+                    target_phone = getattr(target_user_obj, "phone_number", None)
+                    if not target_phone or not str(target_phone).strip():
+                        if app == "payment":
+                            res_phone = await self.db.execute(sa_select(PaymentUser.phone_number).where(PaymentUser.id == user_id))
+                            target_phone = res_phone.scalar_one_or_none()
+                        elif app == "instagram":
+                            res_phone = await self.db.execute(sa_select(InstagramUser.phone_number).where(InstagramUser.id == user_id))
+                            target_phone = res_phone.scalar_one_or_none()
+
+                    # 5a. WhatsApp alert
+                    if target_phone and str(target_phone).strip():
                         try:
-                            from app.models.app_users import PaymentUser, InstagramUser
-                            from sqlalchemy import select as sa_select
-                            user_email = target_user_obj.email
-                            # Resolve real email for app-specific users (mirror email has prefix like "instagram_xxx")
-                            if app == "payment":
-                                res = await self.db.execute(sa_select(PaymentUser.email).where(PaymentUser.id == user_id))
-                                real_email = res.scalar_one_or_none()
-                                if real_email:
-                                    user_email = real_email
-                            elif app == "instagram":
-                                res = await self.db.execute(sa_select(InstagramUser.email).where(InstagramUser.id == user_id))
-                                real_email = res.scalar_one_or_none()
-                                if real_email:
-                                    user_email = real_email
-                            from app.utils.email_sender import send_brute_force_alert
-                            await send_brute_force_alert(
-                                to=user_email,
+                            await send_whatsapp_alert(
+                                to_phone=str(target_phone).strip(),
                                 username=identifier,
-                                ip=ip,
+                                ip_address=ip,
                                 location=location_str,
                                 app_name=app.capitalize() if app != "all" else "System",
                                 failed_count=failed_count,
                                 is_locked=is_locked,
                             )
-                        except Exception as email_err:
-                            logger.error(f"Email brute-force alert error: {email_err}")
+                        except Exception as wa_err:
+                            logger.error(f"WhatsApp alert dispatch error: {wa_err}")
+
+                    # 5b. Email alert (use actual user email, not prefixed mirror email)
+                    try:
+                        user_email = target_user_obj.email
+                        if app == "payment":
+                            res = await self.db.execute(sa_select(PaymentUser.email).where(PaymentUser.id == user_id))
+                            real_email = res.scalar_one_or_none()
+                            if real_email:
+                                user_email = real_email
+                        elif app == "instagram":
+                            res = await self.db.execute(sa_select(InstagramUser.email).where(InstagramUser.id == user_id))
+                            real_email = res.scalar_one_or_none()
+                            if real_email:
+                                user_email = real_email
+                        from app.utils.email_sender import send_brute_force_alert
+                        await send_brute_force_alert(
+                            to=user_email,
+                            username=identifier,
+                            ip=ip,
+                            location=location_str,
+                            app_name=app.capitalize() if app != "all" else "System",
+                            failed_count=failed_count,
+                            is_locked=is_locked,
+                        )
+                    except Exception as email_err:
+                        logger.error(f"Email alert dispatch error: {email_err}")
 
             await self.db.commit()
             return failed_count

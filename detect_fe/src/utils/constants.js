@@ -3,10 +3,10 @@ export const APP_NAME = import.meta.env.VITE_APP_NAME || 'SentinelAI';
 
 export const ALERT_TYPES = {
   SUSPICIOUS_LOGIN: 'suspicious_login',
-  OTP_REQUEST: 'otp_request',
   GMAIL_ALERT: 'gmail_alert',
   WHATSAPP_ALERT: 'whatsapp_alert',
   DEVICE_CHANGE: 'device_change',
+  NEW_DEVICE: 'new_device',
 };
 
 export const RISK_LEVELS = {

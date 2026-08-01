@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
-  MdLogin, MdWarning, MdSms, MdDevices,
+  MdLogin, MdWarning, MdDevices,
   MdTrendingUp, MdTrendingDown, MdRefresh,
-  MdShield, MdLocationOn, MdAccessTime
+  MdShield, MdLocationOn, MdAccessTime, MdBlock
 } from 'react-icons/md';
 import { FiActivity, FiAlertTriangle } from 'react-icons/fi';
 import {
@@ -109,7 +109,11 @@ const Dashboard = () => {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 4000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -184,7 +188,7 @@ const Dashboard = () => {
         <div className="grid-cols-4" style={{ marginBottom: '24px' }}>
           <StatCard icon={<MdLogin />} label="Total Logins" value={stats?.total_logins ?? 0} change="+12.5% vs last week" changeDir="up" color="blue" />
           <StatCard icon={<FiAlertTriangle />} label="Suspicious Attempts" value={stats?.suspicious_attempts ?? 0} change="Needs attention" changeDir="down" color="red" />
-          <StatCard icon={<MdSms />} label="OTP Alerts" value={stats?.otp_alerts ?? 0} subtext="Check notifications" color="purple" />
+          <StatCard icon={<MdBlock />} label="Active Threats" value={stats?.suspicious_attempts ?? 0} subtext="Suspicious events flagged" color="amber" />
           <StatCard icon={<MdDevices />} label="Last Login" value={stats?.last_login ? new Date(stats.last_login).toLocaleDateString() : 'N/A'} subtext="Most recent session" color="green" />
         </div>
       )}

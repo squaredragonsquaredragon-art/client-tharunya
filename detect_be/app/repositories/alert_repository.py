@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
+from sqlalchemy import select, func, desc, and_
 from app.models.suspicious_log_model import SuspiciousLog
-from app.models.otp_alert_model import OtpAlert
 from datetime import datetime, timezone
 
 
@@ -51,7 +50,6 @@ class AlertRepository:
             conditions.append(SuspiciousLog.user_id == user_id)
             
         where_clause = and_(*conditions) if conditions else True
-        from sqlalchemy import and_
 
         count_q = await self.db.execute(
             select(func.count(SuspiciousLog.id)).where(where_clause)
@@ -78,7 +76,6 @@ class AlertRepository:
             conditions.append(SuspiciousLog.user_id == user_id)
             
         where_clause = and_(*conditions) if conditions else True
-        from sqlalchemy import and_
 
         result = await self.db.execute(
             select(func.count(SuspiciousLog.id)).where(
@@ -121,18 +118,3 @@ class AlertRepository:
         )
         return result.scalar_one()
 
-    # OTP
-    async def create_otp(self, otp: OtpAlert) -> OtpAlert:
-        self.db.add(otp)
-        await self.db.flush()
-        await self.db.refresh(otp)
-        return otp
-
-    async def get_latest_otp(self, user_id: str) -> OtpAlert | None:
-        result = await self.db.execute(
-            select(OtpAlert)
-            .where(OtpAlert.user_id == user_id, OtpAlert.is_verified == False)
-            .order_by(desc(OtpAlert.created_at))
-            .limit(1)
-        )
-        return result.scalar_one_or_none()

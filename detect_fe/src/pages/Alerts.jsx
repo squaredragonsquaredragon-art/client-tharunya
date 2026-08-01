@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  MdNotifications, MdWarning, MdEmail, MdSms, MdCheckCircle,
+  MdNotifications, MdWarning, MdEmail, MdCheckCircle,
   MdRefresh, MdFilterList, MdDoneAll, MdPayment, MdCameraAlt,
   MdShoppingCart, MdSecurity, MdLocationOn, MdDevices, MdAccessTime, MdInfo
 } from 'react-icons/md';
@@ -15,7 +15,7 @@ const ALERT_META = {
   new_ip:        { icon: <MdEmail />,          iconColor: 'blue',   title: 'New IP Address' },
   suspicious_ip: { icon: <FiAlertTriangle />, iconColor: 'red',    title: 'Suspicious IP Flagged' },
   ml_anomaly:    { icon: <MdWarning />,       iconColor: 'purple', title: 'AI Anomaly Detected' },
-  otp_request:   { icon: <MdSms />,           iconColor: 'purple', title: 'OTP Verification' },
+  new_device:    { icon: <MdDevices />,      iconColor: 'blue',   title: 'New Device Detected' },
   default:       { icon: <MdNotifications />, iconColor: 'blue',   title: 'Security Alert' },
 };
 

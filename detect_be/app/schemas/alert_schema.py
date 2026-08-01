@@ -25,6 +25,3 @@ class AlertsResponse(BaseModel):
     items: List[AlertOut]
 
 
-class OtpVerifySchema(BaseModel):
-    otp_code: str
-    user_id: str

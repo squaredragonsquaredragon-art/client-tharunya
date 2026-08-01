@@ -67,21 +67,39 @@ async def send_whatsapp_alert(
         f"If this is you, ignore this message. Otherwise, secure your account immediately! 🛡️"
     )
 
-    def _send_via_twilio():
+    def _send_via_twilio(from_num: str):
         from twilio.rest import Client  # type: ignore
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
         message = client.messages.create(
             body=message_body,
-            from_=settings.TWILIO_WHATSAPP_FROM,
+            from_=from_num,
             to=to_number,
         )
         return message.sid
 
     try:
         loop = asyncio.get_event_loop()
-        sid = await loop.run_in_executor(None, _send_via_twilio)
-        logger.info(f"✅ WhatsApp alert sent to {to_number} for @{username} — SID: {sid}")
-        return True
+        from_sender = settings.TWILIO_WHATSAPP_FROM or "whatsapp:+14155238886"
+        if not from_sender.startswith("whatsapp:"):
+            from_sender = f"whatsapp:{from_sender}"
+
+        try:
+            sid = await loop.run_in_executor(None, _send_via_twilio, from_sender)
+            logger.info(f"✅ WhatsApp alert sent from {from_sender} to {to_number} for @{username} — SID: {sid}")
+            return True
+        except Exception as primary_err:
+            if from_sender != "whatsapp:+14155238886":
+                logger.warning(f"Primary WhatsApp sender {from_sender} failed: {primary_err}. Retrying via Twilio Sandbox (+14155238886)...")
+                sid = await loop.run_in_executor(None, _send_via_twilio, "whatsapp:+14155238886")
+                logger.info(f"✅ WhatsApp alert sent via Sandbox to {to_number} for @{username} — SID: {sid}")
+                return True
+            raise primary_err
     except Exception as e:
-        logger.error(f"❌ WhatsApp alert failed for @{username} ({to_number}): {e}")
+        err_str = str(e)
+        logger.error(f"❌ WhatsApp alert failed for @{username} ({to_number}): {err_str}")
+        if "401" in err_str or "Authenticate" in err_str:
+            logger.warning(
+                "💡 [TWILIO AUTH 401 ERROR] The TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN in detect_be/.env is invalid or expired.\n"
+                "   Please copy your active Account SID and Auth Token from https://console.twilio.com into detect_be/.env!"
+            )
         return False

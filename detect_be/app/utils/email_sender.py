@@ -35,20 +35,7 @@ async def send_email(to: str, subject: str, html_body: str) -> bool:
         return False
 
 
-async def send_otp_email(to: str, otp: str, username: str) -> bool:
-    html = f"""
-    <div style="font-family:Inter,sans-serif;background:#060b18;padding:40px;border-radius:16px;color:#e2e8f0;max-width:500px;margin:0 auto;">
-      <h2 style="color:#60a5fa;margin-bottom:8px;">🛡️ SentinelAI Security Alert</h2>
-      <p>Hi <strong>{username}</strong>,</p>
-      <p>Your one-time verification code is:</p>
-      <div style="background:#0f1b2e;border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:24px;text-align:center;margin:20px 0;">
-        <span style="font-size:2.5rem;font-weight:800;letter-spacing:0.2em;color:#3b82f6;font-family:monospace;">{otp}</span>
-      </div>
-      <p style="color:#94a3b8;font-size:0.9rem;">This code expires in <strong>5 minutes</strong>. Do not share it with anyone.</p>
-      <p style="color:#94a3b8;font-size:0.85rem;margin-top:20px;">If you didn't request this, please secure your account immediately.</p>
-    </div>
-    """
-    return await send_email(to, "SentinelAI — Your OTP Verification Code", html)
+
 
 
 async def send_suspicious_login_alert(to: str, username: str, ip: str, location: str, browser: str) -> bool:
