@@ -41,9 +41,20 @@ class LoginRepository:
         limit: int = 20,
         source_app: Optional[str] = None,
         event_type: Optional[str] = None,
+        for_super_admin: bool = True,
     ) -> tuple[int, list[LoginLog]]:
         """Return logs for ALL users — used by detect_fe monitoring view."""
-        where_clause = self._build_conditions(source_app=source_app, event_type=event_type)
+        conditions = []
+        if source_app and source_app != "all":
+            conditions.append(LoginLog.source_app == source_app)
+        if event_type and event_type != "all":
+            conditions.append(LoginLog.event_type == event_type)
+            
+        if not for_super_admin:
+            # Regular admin can ONLY see logs where username is 'admin'
+            conditions.append(LoginLog.username == 'admin')
+
+        where_clause = and_(*conditions) if conditions else True
         count_q = await self.db.execute(select(func.count()).where(where_clause))
         total = count_q.scalar_one()
         result = await self.db.execute(

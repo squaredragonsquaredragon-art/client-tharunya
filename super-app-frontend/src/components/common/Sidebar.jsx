@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Shield,
   Home,
-  ShoppingBag,
   Clapperboard,
   Wallet,
   MessageSquare,
@@ -14,7 +13,6 @@ import {
   CreditCard,
   History,
   User,
-  Heart,
   Camera,
   Sliders
 } from 'lucide-react';
@@ -72,22 +70,6 @@ const Sidebar = () => {
           ]
         };
 
-      case 'ecommerce':
-        return {
-          title: 'SENTINEL STORE',
-          titleColor: 'hsl(var(--accent-cyan))',
-          accentColor: 'hsl(var(--accent-cyan))',
-          logoIcon: <ShoppingBag size={20} color="hsl(var(--accent-cyan))" />,
-          logoBg: 'rgba(0, 240, 255, 0.05)',
-          logoBorder: '1px solid rgba(0, 240, 255, 0.15)',
-          links: [
-            { to: '/ecommerce', label: 'Browse catalog', icon: <ShoppingBag size={18} /> },
-            { to: '/ecommerce/cart', label: 'Shopping cart', icon: <ShoppingBag size={18} /> },
-            { to: '/ecommerce/wishlist', label: 'Wishlist items', icon: <Heart size={18} /> },
-            { to: '/profile', label: 'Buyer Settings', icon: <User size={18} /> }
-          ]
-        };
-
       default:
         return {
           title: 'SENTINELAI',
@@ -98,7 +80,6 @@ const Sidebar = () => {
           logoBorder: '1px solid rgba(0, 240, 255, 0.15)',
           links: [
             { to: '/', label: 'Home Feed', icon: <Home size={18} /> },
-            { to: '/ecommerce', label: 'Storefront', icon: <ShoppingBag size={18} /> },
             { to: '/reels', label: 'Short Reels', icon: <Clapperboard size={18} /> },
             { to: '/payment', label: 'Wallet', icon: <Wallet size={18} /> },
             { to: '/messaging', label: 'Live Chats', icon: <MessageSquare size={18} /> }
@@ -138,7 +119,6 @@ const Sidebar = () => {
         onClick={() => {
           if (activeApp === 'payment') navigate('/payment');
           else if (activeApp === 'instagram') navigate('/reels');
-          else if (activeApp === 'ecommerce') navigate('/ecommerce');
           else navigate('/');
         }}
       >
@@ -171,7 +151,7 @@ const Sidebar = () => {
               transition: 'all var(--transition-fast)'
             })}
             className="sidebar-link"
-            end={link.to === '/' || link.to === '/payment' || link.to === '/ecommerce' || link.to === '/reels'}
+            end={link.to === '/' || link.to === '/payment' || link.to === '/reels'}
           >
             {React.cloneElement(link.icon, { color: 'currentColor' })}
             {link.label}

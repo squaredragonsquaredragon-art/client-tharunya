@@ -9,10 +9,10 @@ from app.services.login_service import LoginService
 
 
 class ActivitySchema(BaseModel):
-    activity_type: str   # e.g., "Apex Pay", "InstaGlance", "Sentinel Store"
-    action: str          # e.g., "Fund Transfer", "Like Post", "Checkout Order"
+    activity_type: str   # e.g., "Apex Pay", "InstaGlance"
+    action: str          # e.g., "Fund Transfer", "Like Post"
     description: str     # e.g., "Transferred $50 to Bob"
-    source_app: Optional[str] = None  # explicit: payment | instagram | ecommerce | system
+    source_app: Optional[str] = None  # explicit: payment | instagram | system
 
 
 router = APIRouter(prefix="/login-history", tags=["Login History"])
@@ -74,14 +74,14 @@ async def log_activity(
 async def get_all_login_history(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    source_app: Optional[str] = Query(None, description="Filter by app: payment | instagram | ecommerce | system"),
+    source_app: Optional[str] = Query(None, description="Filter by app: payment | instagram | system"),
     event_type: Optional[str] = Query(None, description="Filter by event: register | login | failed | activity"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Returns activity for ALL users across all apps. Used by detect_fe security monitor."""
     return await LoginService(db).get_all_history(
-        page, page_size, source_app=source_app, event_type=event_type
+        page, page_size, source_app=source_app, event_type=event_type, current_user=current_user
     )
 
 

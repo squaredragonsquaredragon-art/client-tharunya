@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useNotification } from '../../context/NotificationContext';
 import { validateEmail, validatePassword, validateUsername } from '../../utils/validators';
-import { Mail, Lock, User, UserCheck, Wallet, Clapperboard, ShoppingBag, ArrowLeft, Phone } from 'lucide-react';
+import { Mail, Lock, User, UserCheck, Wallet, Clapperboard, ArrowLeft, Phone } from 'lucide-react';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -74,15 +74,6 @@ const Register = () => {
           accent: 'hsl(var(--accent-purple))',
           glow: '0 0 20px rgba(189, 0, 255, 0.2)',
           buttonClass: 'btn-premium',
-        };
-      case 'ecommerce':
-        return {
-          title: 'SENTINEL STORE',
-          subtitle: 'Create Elite Security Store Profile',
-          icon: <ShoppingBag size={28} color="hsl(var(--accent-cyan))" />,
-          accent: 'hsl(var(--accent-cyan))',
-          glow: '0 0 20px rgba(0, 240, 255, 0.2)',
-          buttonClass: 'btn-primary',
         };
       default:
         return {

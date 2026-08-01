@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { usePaymentStore } from '../../store/paymentStore';
-import { useEcommerceStore } from '../../store/ecommerceStore';
 import { useSecurityStore } from '../../store/securityStore';
 import {
   User,
@@ -16,7 +15,6 @@ import {
   MessageCircle,
   Sliders,
   Settings,
-  ShoppingBag,
   Award
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
@@ -24,7 +22,6 @@ import { formatCurrency, formatDate } from '../../utils/formatters';
 const UserProfile = () => {
   const { user } = useAuthStore();
   const { balance, banks, fetchWalletState } = usePaymentStore();
-  const { cart, fetchCart } = useEcommerceStore();
   const { fetchLoginHistory } = useSecurityStore();
   const navigate = useNavigate();
   const [activeApp, setActiveApp] = useState('all');
@@ -36,11 +33,9 @@ const UserProfile = () => {
     // Prefetch relevant stores
     if (app === 'payment') {
       fetchWalletState();
-    } else if (app === 'ecommerce') {
-      fetchCart();
     }
     fetchLoginHistory(1, 4);
-  }, [fetchWalletState, fetchCart, fetchLoginHistory]);
+  }, [fetchWalletState, fetchLoginHistory]);
 
   const getAccentColor = () => {
     if (activeApp === 'payment') return 'hsl(var(--accent-green))';
@@ -299,102 +294,7 @@ const UserProfile = () => {
     </div>
   );
 
-  // 3. Sentinel Store customer settings Profile (E-commerce layout)
-  const renderEcommerceProfile = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      {/* Store card details */}
-      <div
-        className="glass-card"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          borderLeft: `4px solid ${getAccentColor()}`,
-          boxShadow: '0 8px 30px rgba(0, 240, 255, 0.05)',
-          padding: '32px'
-        }}
-      >
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <div
-            style={{
-              width: '60px',
-              height: '60px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, hsl(var(--accent-cyan)), hsl(var(--accent-blue)))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 800,
-              fontSize: '20px',
-              color: '#000',
-              boxShadow: 'var(--neon-glow-cyan)'
-            }}
-          >
-            {user?.username.slice(0, 2).toUpperCase()}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2 style={{ fontSize: '20px', margin: 0, fontWeight: 800 }}>{user?.username}</h2>
-              <span className="badge badge-info" style={{ fontSize: '8px', padding: '2px 6px' }}>Gold buyer</span>
-            </div>
-            <span style={{ fontSize: '13px', color: 'hsl(var(--text-muted))' }}>{user?.email}</span>
-          </div>
-        </div>
-        <button onClick={() => navigate('/profile/edit')} className="btn btn-secondary" style={{ fontSize: '13px', padding: '10px 16px' }}>
-          Edit Profile
-        </button>
-      </div>
 
-      {/* Cart specs */}
-      <div className="grid-cols-2">
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span style={{ fontSize: '12px', color: 'hsl(var(--text-muted))' }}>Active Cart Volume</span>
-          <span style={{ fontSize: '20px', fontWeight: 800 }}>{cart.length} item(s) in cart</span>
-        </div>
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span style={{ fontSize: '12px', color: 'hsl(var(--text-muted))' }}>Delivery Node Address</span>
-          <span style={{ fontSize: '13px', fontWeight: 600 }}>Quarantined Sandbox Hub</span>
-        </div>
-      </div>
-
-      {/* Historical Purchases List */}
-      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <h3 style={{ margin: 0, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <History size={18} color={getAccentColor()} />
-          Historical Orders timeline
-        </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {mockOrders.map((order) => (
-            <div
-              key={order.id}
-              style={{
-                padding: '14px 16px',
-                borderRadius: 'var(--border-radius-sm)',
-                background: 'rgba(255,255,255,0.01)',
-                border: '1px solid rgba(255,255,255,0.04)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '13px'
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontWeight: 700 }}>{order.items}</span>
-                <span style={{ fontSize: '11px', color: 'hsl(var(--text-muted))' }}>Order ID: {order.id} • {formatDate(order.date)}</span>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontWeight: 700, color: 'hsl(var(--accent-cyan))' }}>{formatCurrency(order.total)}</span>
-                <div style={{ marginTop: '2px' }}>
-                  <span className={`badge badge-${order.status === 'delivered' ? 'success' : 'warning'}`} style={{ fontSize: '8px' }}>
-                    {order.status}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 
   // Fallback Unified Settings View
   const renderFallbackProfile = () => (
@@ -411,7 +311,6 @@ const UserProfile = () => {
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       {activeApp === 'payment' && renderPaymentProfile()}
       {activeApp === 'instagram' && renderSocialProfile()}
-      {activeApp === 'ecommerce' && renderEcommerceProfile()}
       {activeApp === 'all' && renderFallbackProfile()}
 
       {/* Universal settings links under profile */}

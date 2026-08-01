@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { ShieldCheck, Wallet, Clapperboard, ShoppingBag } from 'lucide-react';
+import { ShieldCheck, Wallet, Clapperboard } from 'lucide-react';
 
 const BootSelector = () => {
   const navigate = useNavigate();
@@ -31,15 +31,6 @@ const BootSelector = () => {
       borderColor: 'hsla(var(--accent-purple), 0.15)',
       themeClass: 'theme-social'
     },
-    {
-      type: 'ecommerce',
-      name: 'Sentinel Store',
-      desc: 'Elite hardware-security boutique storefront & checkout operations.',
-      icon: <ShoppingBag size={36} color="hsl(var(--accent-cyan))" />,
-      glow: '0 0 30px rgba(0, 240, 255, 0.15)',
-      borderColor: 'hsla(var(--accent-cyan), 0.15)',
-      themeClass: 'theme-store'
-    }
   ];
 
   return (
@@ -109,11 +100,11 @@ const BootSelector = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, minmax(0, 320px))',
+          gridTemplateColumns: 'repeat(2, minmax(0, 320px))',
           gap: '24px',
           zIndex: 10,
           width: '100%',
-          maxWidth: '1024px',
+          maxWidth: '680px',
           justifyContent: 'center'
         }}
         className="animate-slide-up"

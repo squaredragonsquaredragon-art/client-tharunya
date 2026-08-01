@@ -4,7 +4,7 @@ import { useSecurityStore } from '../../store/securityStore';
 import { useAuthStore } from '../../store/authStore';
 import useSecurity from '../../hooks/useSecurity';
 import Loader from '../../components/common/Loader';
-import { ShieldCheck, ArrowRight, ShieldAlert, Cpu, ShoppingBag, Clapperboard, Wallet, MessageSquare, History } from 'lucide-react';
+import { ShieldCheck, ArrowRight, ShieldAlert, Cpu, Clapperboard, Wallet, MessageSquare, History } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
 
 const Home = () => {
@@ -17,7 +17,6 @@ const Home = () => {
     const activeApp = localStorage.getItem('sentinel_active_app');
     if (activeApp === 'payment') navigate('/payment', { replace: true });
     else if (activeApp === 'instagram') navigate('/reels', { replace: true });
-    else if (activeApp === 'ecommerce') navigate('/ecommerce', { replace: true });
     else {
       fetchLoginHistory(1, 4);
       fetchHistoryStats();
@@ -25,7 +24,6 @@ const Home = () => {
   }, [fetchLoginHistory, fetchHistoryStats, navigate]);
 
   const quickLinks = [
-    { to: '/ecommerce', label: 'Storefront', desc: 'Secure smart gear shopping', icon: <ShoppingBag size={22} color="hsl(var(--accent-cyan))" />, border: 'hsla(var(--accent-cyan), 0.15)' },
     { to: '/reels', label: 'Cyber Reels', desc: 'Vertical cyberpunk streams', icon: <Clapperboard size={22} color="hsl(var(--accent-purple))" />, border: 'hsla(var(--accent-purple), 0.15)' },
     { to: '/payment', label: 'E-Wallet', desc: 'Frictionless transfers & QR', icon: <Wallet size={22} color="hsl(var(--accent-green))" />, border: 'hsla(var(--accent-green), 0.15)' },
     { to: '/messaging', label: 'Safe Chats', icon: <MessageSquare size={22} color="hsl(var(--accent-blue))" />, desc: 'Encrypted peer communications', border: 'hsla(var(--accent-blue), 0.15)' }

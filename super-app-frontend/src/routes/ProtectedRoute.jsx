@@ -9,7 +9,6 @@ const ProtectedRoute = () => {
   const detectAppFromPath = (pathname) => {
     if (pathname.startsWith('/reels')) return 'instagram';
     if (pathname.startsWith('/payment')) return 'payment';
-    if (pathname.startsWith('/ecommerce')) return 'ecommerce';
     return null;
   };
 

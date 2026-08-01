@@ -8,8 +8,6 @@ import {
   Clapperboard,
   Camera,
   MessageSquare,
-  ShoppingBag,
-  Heart,
   Home
 } from 'lucide-react';
 
@@ -39,18 +37,9 @@ const BottomNavigation = () => {
           { to: '/profile', icon: <User size={20} />, label: 'Profile' }
         ];
 
-      case 'ecommerce':
-        return [
-          { to: '/ecommerce', icon: <ShoppingBag size={20} />, label: 'Store' },
-          { to: '/ecommerce/cart', icon: <ShoppingBag size={20} />, label: 'Cart' },
-          { to: '/ecommerce/wishlist', icon: <Heart size={20} />, label: 'Wishlist' },
-          { to: '/profile', icon: <User size={20} />, label: 'Profile' }
-        ];
-
       default:
         return [
           { to: '/', icon: <Home size={20} />, label: 'Home' },
-          { to: '/ecommerce', icon: <ShoppingBag size={20} />, label: 'Store' },
           { to: '/reels', icon: <Clapperboard size={20} />, label: 'Reels' },
           { to: '/payment', icon: <Wallet size={20} />, label: 'Wallet' },
           { to: '/messaging', icon: <MessageSquare size={20} />, label: 'Chats' }
@@ -95,7 +84,7 @@ const BottomNavigation = () => {
             padding: '8px 12px',
             transition: 'color var(--transition-fast)',
           })}
-          end={tab.to === '/' || tab.to === '/payment' || tab.to === '/ecommerce' || tab.to === '/reels'}
+          end={tab.to === '/' || tab.to === '/payment' || tab.to === '/reels'}
         >
           {tab.icon}
           <span>{tab.label}</span>

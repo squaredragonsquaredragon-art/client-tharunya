@@ -44,30 +44,45 @@ class AlertRepository:
         return total, unread, list(result.scalars().all())
 
     async def get_all_alerts_paginated(
-        self, skip: int = 0, limit: int = 20
+        self, skip: int = 0, limit: int = 20, for_super_admin: bool = True, user_id: str = None
     ) -> tuple[int, int, list[SuspiciousLog]]:
+        conditions = []
+        if not for_super_admin and user_id:
+            conditions.append(SuspiciousLog.user_id == user_id)
+            
+        where_clause = and_(*conditions) if conditions else True
+        from sqlalchemy import and_
+
         count_q = await self.db.execute(
-            select(func.count(SuspiciousLog.id))
+            select(func.count(SuspiciousLog.id)).where(where_clause)
         )
         total = count_q.scalar_one()
         unread_q = await self.db.execute(
             select(func.count(SuspiciousLog.id)).where(
-                SuspiciousLog.is_read == False
+                where_clause, SuspiciousLog.is_read == False
             )
         )
         unread = unread_q.scalar_one()
         result = await self.db.execute(
             select(SuspiciousLog)
+            .where(where_clause)
             .order_by(desc(SuspiciousLog.created_at))
             .offset(skip)
             .limit(limit)
         )
         return total, unread, list(result.scalars().all())
 
-    async def get_all_unread_count(self) -> int:
+    async def get_all_unread_count(self, for_super_admin: bool = True, user_id: str = None) -> int:
+        conditions = []
+        if not for_super_admin and user_id:
+            conditions.append(SuspiciousLog.user_id == user_id)
+            
+        where_clause = and_(*conditions) if conditions else True
+        from sqlalchemy import and_
+
         result = await self.db.execute(
             select(func.count(SuspiciousLog.id)).where(
-                SuspiciousLog.is_read == False
+                where_clause, SuspiciousLog.is_read == False
             )
         )
         return result.scalar_one()

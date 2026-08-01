@@ -22,7 +22,6 @@ const Navbar = ({ onToggleMobileSidebar }) => {
   const getPageTitle = () => {
     const path = location.pathname;
     if (path === '/') return 'Home Feed';
-    if (path.startsWith('/ecommerce')) return 'Sentinel E-Commerce';
     if (path.startsWith('/reels')) return 'Interactive Reels';
     if (path.startsWith('/payment')) return 'Secure Wallet';
     if (path.startsWith('/messaging')) return 'Real-time Chat';

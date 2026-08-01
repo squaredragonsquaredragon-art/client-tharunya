@@ -50,7 +50,7 @@ async def get_all_alerts(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await AlertService(db).get_all_alerts(page, page_size)
+    return await AlertService(db).get_all_alerts(page, page_size, current_user=current_user)
 
 
 @router.get("/all/unread-count/", summary="Get all unread alert count")
@@ -58,4 +58,4 @@ async def get_all_unread_count(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await AlertService(db).get_all_unread_count()
+    return await AlertService(db).get_all_unread_count(current_user=current_user)

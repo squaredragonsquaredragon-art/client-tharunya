@@ -9,7 +9,6 @@ const PublicRoute = () => {
   if (accessToken) {
     if (activeApp === 'payment') return <Navigate to="/payment" replace />;
     if (activeApp === 'instagram') return <Navigate to="/reels" replace />;
-    if (activeApp === 'ecommerce') return <Navigate to="/ecommerce" replace />;
     return <Navigate to="/" replace />;
   }
 

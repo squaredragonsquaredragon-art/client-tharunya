@@ -195,7 +195,7 @@ class AuthService:
         }
 
     async def register(self, data: RegisterSchema, request: Request, app: str = "all") -> dict:
-        from app.models.app_users import PaymentUser, InstagramUser, EcommerceUser
+        from app.models.app_users import PaymentUser, InstagramUser
         from sqlalchemy import select
 
         model_cls = None
@@ -203,8 +203,6 @@ class AuthService:
             model_cls = PaymentUser
         elif app == "instagram":
             model_cls = InstagramUser
-        elif app == "ecommerce":
-            model_cls = EcommerceUser
 
         if model_cls:
             # Check unique username/email in app-specific table
@@ -244,6 +242,7 @@ class AuthService:
                 last_name=data.last_name,
                 phone_number=data.phone_number,
                 role="user",
+                is_active=False,
             )
             user = await self.user_repo.create(user)
         else:
@@ -262,6 +261,7 @@ class AuthService:
                 first_name=data.first_name,
                 last_name=data.last_name,
                 phone_number=data.phone_number,
+                is_active=False,
             )
             user = await self.user_repo.create(user)
 
@@ -295,7 +295,7 @@ class AuthService:
         return {**tokens, "user": user_out}
 
     async def login(self, data: LoginSchema, request: Request, app: str = "all") -> dict:
-        from app.models.app_users import PaymentUser, InstagramUser, EcommerceUser
+        from app.models.app_users import PaymentUser, InstagramUser
         from sqlalchemy import select, or_, desc
         from datetime import datetime, timezone
 
@@ -311,16 +311,12 @@ class AuthService:
             app_uid = res.scalar_one_or_none()
             if app_uid:
                 target_user = await self.user_repo.get_by_id(app_uid)
-        elif app == "ecommerce":
-            res = await self.db.execute(select(EcommerceUser.id).where(or_(EcommerceUser.username == data.username, EcommerceUser.email == data.username)))
-            app_uid = res.scalar_one_or_none()
-            if app_uid:
-                target_user = await self.user_repo.get_by_id(app_uid)
         else:
             target_user = await self.user_repo.get_by_username_or_email(data.username)
 
-        # 2. Auto-unlock logic: If account is locked/inactive, check if 5 minutes have elapsed since the last failed login
+        # 2. Auto-unlock & Approval Check: If account is locked/inactive
         if target_user and not target_user.is_active:
+            # Check if account was locked due to failed attempts
             last_failed_res = await self.db.execute(
                 select(LoginLog)
                 .where(LoginLog.user_id == target_user.id, LoginLog.event_type == "failed")
@@ -328,54 +324,29 @@ class AuthService:
                 .limit(1)
             )
             last_failed = last_failed_res.scalar_one_or_none()
-            if last_failed:
+            if last_failed and "blocked" in (last_failed.status or "").lower():
                 time_diff = datetime.now(timezone.utc) - last_failed.login_time.replace(tzinfo=timezone.utc)
                 total_sec = time_diff.total_seconds()
-                if total_sec >= 300: # 5 minutes = 300 seconds
+                if total_sec >= 300: # 5 minutes auto-unlock
                     target_user.is_active = True
                     await self.db.commit()
                 else:
-                    # Log this blocked attempt so it shows up in detect_fe Activity History under "Failed / Hack"!
-                    ua_string = request.headers.get("user-agent", "")
-                    device_info = parse_user_agent(ua_string)
-                    ip = self._get_ip(request)
-                    location_str = await resolve_exact_location(ip)
-
-                    log = LoginLog(
-                        user_id=target_user.id,
-                        username=data.username,
-                        ip_address=ip,
-                        user_agent=ua_string,
-                        browser=f"{app.capitalize()} Portal" if app != "all" else device_info["browser"],
-                        os=device_info["os"],
-                        device=device_info["device"],
-                        location=f"Attempted login on blocked account. Origin: {location_str}",
-                        source_app=app if app != "all" else "system",
-                        event_type="failed",
-                        status="blocked",
-                        is_suspicious=True,
-                        risk_score=80.0,
-                    )
-                    await self.login_repo.create(log)
-                    await self.db.commit()
-
                     remaining = 300 - total_sec
                     m = int(remaining // 60)
                     s = int(remaining % 60)
                     raise HTTPException(
                         status.HTTP_403_FORBIDDEN,
-                        f"Your account is blocked. Try again in {m} minutes {s} seconds."
+                        f"Your account is blocked due to security lockout. Try again in {m} minutes {s} seconds."
                     )
             else:
-                raise HTTPException(status.HTTP_403_FORBIDDEN, "Your account is blocked. Please contact support.")
+                # Fresh account awaiting approval or admin disabled
+                raise HTTPException(status.HTTP_403_FORBIDDEN, "Super admin still not approved")
 
         model_cls = None
         if app == "payment":
             model_cls = PaymentUser
         elif app == "instagram":
             model_cls = InstagramUser
-        elif app == "ecommerce":
-            model_cls = EcommerceUser
 
         if model_cls:
             # Query specific credentials table
@@ -411,7 +382,7 @@ class AuthService:
                 raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
 
         if not user.is_active:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Your account is blocked. Please contact support.")
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Super admin still not approved")
 
         # Parse device info
         ua_string = request.headers.get("user-agent", "")
@@ -529,7 +500,7 @@ class AuthService:
 
                     app = "system"
                     display_username = user.username
-                    for prefix in ["payment_", "instagram_", "ecommerce_"]:
+                    for prefix in ["payment_", "instagram_"]:
                         if user.username.startswith(prefix):
                             app = prefix[:-1]
                             display_username = user.username[len(prefix):]
@@ -570,7 +541,7 @@ class AuthService:
         device_info = parse_user_agent(ua_string)
         ip = self._get_ip(request)
 
-        from app.models.app_users import PaymentUser, InstagramUser, EcommerceUser
+        from app.models.app_users import PaymentUser, InstagramUser
         from sqlalchemy import select, or_, func
         from datetime import datetime, timezone, timedelta
 
@@ -587,13 +558,6 @@ class AuthService:
             res = await self.db.execute(
                 select(InstagramUser.id).where(
                     or_(InstagramUser.username == identifier, InstagramUser.email == identifier)
-                )
-            )
-            user_id = res.scalar_one_or_none()
-        elif app == "ecommerce":
-            res = await self.db.execute(
-                select(EcommerceUser.id).where(
-                    or_(EcommerceUser.username == identifier, EcommerceUser.email == identifier)
                 )
             )
             user_id = res.scalar_one_or_none()
@@ -624,7 +588,7 @@ class AuthService:
                 location=f"Blocked credentials mismatch for target '{identifier}' in {location_str}",
                 source_app=app if app != "all" else "system",
                 event_type="failed",
-                status="blocked",
+                status="failed",
                 is_suspicious=True,
                 risk_score=75.0,
             )
@@ -655,6 +619,7 @@ class AuthService:
                 user = await self.user_repo.get_by_id(user_id)
                 if user and user.is_active:
                     user.is_active = False
+                    log.status = "blocked"
                     log.location = f"Account deactivated due to >= 6 wrong password attempts. Locked in {location_str}"
 
             # 4. Alert Trigger Rule: Only generate an alert if they enter wrong password MORE THAN 3 times
@@ -719,10 +684,10 @@ class AuthService:
 
                         # 5b. Email alert (use actual user email, not prefixed mirror email)
                         try:
-                            from app.models.app_users import PaymentUser, InstagramUser, EcommerceUser
+                            from app.models.app_users import PaymentUser, InstagramUser
                             from sqlalchemy import select as sa_select
                             user_email = target_user_obj.email
-                            # Resolve real email for app-specific users (mirror email has prefix like "ecommerce_xxx")
+                            # Resolve real email for app-specific users (mirror email has prefix like "instagram_xxx")
                             if app == "payment":
                                 res = await self.db.execute(sa_select(PaymentUser.email).where(PaymentUser.id == user_id))
                                 real_email = res.scalar_one_or_none()
@@ -730,11 +695,6 @@ class AuthService:
                                     user_email = real_email
                             elif app == "instagram":
                                 res = await self.db.execute(sa_select(InstagramUser.email).where(InstagramUser.id == user_id))
-                                real_email = res.scalar_one_or_none()
-                                if real_email:
-                                    user_email = real_email
-                            elif app == "ecommerce":
-                                res = await self.db.execute(sa_select(EcommerceUser.email).where(EcommerceUser.id == user_id))
                                 real_email = res.scalar_one_or_none()
                                 if real_email:
                                     user_email = real_email

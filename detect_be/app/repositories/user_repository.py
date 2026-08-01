@@ -48,3 +48,7 @@ class UserRepository:
     async def exists_email(self, email: str) -> bool:
         result = await self.db.execute(select(User.id).where(User.email == email))
         return result.scalar_one_or_none() is not None
+
+    async def delete(self, user: User) -> None:
+        await self.db.delete(user)
+        await self.db.flush()

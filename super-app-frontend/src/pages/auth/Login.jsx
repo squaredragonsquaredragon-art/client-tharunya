@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useNotification } from '../../context/NotificationContext';
-import { Mail, Lock, LogIn, ShieldAlert, Wallet, Clapperboard, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, LogIn, ShieldAlert, Wallet, Clapperboard, ArrowLeft } from 'lucide-react';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -38,8 +38,6 @@ const Login = () => {
         navigate('/payment');
       } else if (activeApp === 'instagram') {
         navigate('/reels');
-      } else if (activeApp === 'ecommerce') {
-        navigate('/ecommerce');
       } else {
         navigate('/');
       }
@@ -73,15 +71,6 @@ const Login = () => {
           accent: 'hsl(var(--accent-purple))',
           glow: '0 0 20px rgba(189, 0, 255, 0.2)',
           buttonClass: 'btn-premium', // uses premium gradient
-        };
-      case 'ecommerce':
-        return {
-          title: 'SENTINEL STORE',
-          subtitle: 'Elite Security Hardware Boutique',
-          icon: <ShoppingBag size={28} color="hsl(var(--accent-cyan))" />,
-          accent: 'hsl(var(--accent-cyan))',
-          glow: '0 0 20px rgba(0, 240, 255, 0.2)',
-          buttonClass: 'btn-primary',
         };
       default:
         return {

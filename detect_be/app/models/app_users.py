@@ -35,16 +35,4 @@ class InstagramUser(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
-class EcommerceUser(Base):
-    __tablename__ = "ecommerce_users"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
-    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    first_name: Mapped[str] = mapped_column(String(100), default="")
-    last_name: Mapped[str] = mapped_column(String(100), default="")
-    phone_number: Mapped[str] = mapped_column(String(20), default="", nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

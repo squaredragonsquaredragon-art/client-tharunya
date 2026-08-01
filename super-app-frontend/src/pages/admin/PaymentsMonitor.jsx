@@ -5,7 +5,7 @@ import { formatCurrency, formatDate } from '../../utils/formatters';
 const PaymentsMonitor = () => {
   const paymentLogs = [
     { id: 'tx_9921', user: 'neo_prime', amount: 50000.00, direction: 'out', target: 'Nebula Holdings', risk: 'critical', date: '2026-05-24T17:12:00Z' },
-    { id: 'tx_9922', user: 'sarah_c', amount: 240.00, direction: 'out', target: 'Sentinel Store', risk: 'low', date: '2026-05-24T16:04:00Z' },
+    { id: 'tx_9922', user: 'sarah_c', amount: 240.00, direction: 'out', target: 'Vendor Store', risk: 'low', date: '2026-05-24T16:04:00Z' },
     { id: 'tx_9923', user: 'trinity', amount: 1500.00, direction: 'in', target: 'Acme Corp', risk: 'low', date: '2026-05-24T14:22:00Z' },
     { id: 'tx_9924', user: 'john_doe', amount: 9800.00, direction: 'out', target: 'Apex Crypto Mixer', risk: 'high', date: '2026-05-24T11:45:00Z' }
   ];

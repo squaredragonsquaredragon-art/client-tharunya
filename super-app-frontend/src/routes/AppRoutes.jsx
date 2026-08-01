@@ -24,14 +24,6 @@ const Home = lazy(() => import('../pages/home/Home'));
 const Notifications = lazy(() => import('../pages/home/Notifications'));
 const Explore = lazy(() => import('../pages/home/Explore'));
 
-// E-commerce — lazy loaded
-const Products = lazy(() => import('../pages/ecommerce/Products'));
-const ProductDetails = lazy(() => import('../pages/ecommerce/ProductDetails'));
-const Cart = lazy(() => import('../pages/ecommerce/Cart'));
-const Checkout = lazy(() => import('../pages/ecommerce/Checkout'));
-const Wishlist = lazy(() => import('../pages/ecommerce/Wishlist'));
-const SellerDashboard = lazy(() => import('../pages/ecommerce/SellerDashboard'));
-const Categories = lazy(() => import('../pages/ecommerce/Categories'));
 
 // Wallet/Payment — lazy loaded
 const Wallet = lazy(() => import('../pages/payment/Wallet'));
@@ -117,14 +109,6 @@ const AppRoutes = () => {
           <Route path="/explore" element={<Explore />} />
           <Route path="/notifications" element={<Notifications />} />
 
-          {/* E-commerce */}
-          <Route path="/ecommerce" element={<Products />} />
-          <Route path="/ecommerce/categories" element={<Categories />} />
-          <Route path="/ecommerce/product/:id" element={<ProductDetails />} />
-          <Route path="/ecommerce/cart" element={<Cart />} />
-          <Route path="/ecommerce/checkout" element={<Checkout />} />
-          <Route path="/ecommerce/wishlist" element={<Wishlist />} />
-          <Route path="/ecommerce/seller" element={<SellerDashboard />} />
 
           {/* Payments / Wallet */}
           <Route path="/payment" element={<Wallet />} />

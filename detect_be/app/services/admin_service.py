@@ -74,7 +74,39 @@ class AdminService:
             "total_suspicious": total_suspicious,
         }
 
-    async def get_all_alerts(self) -> list:
+    async def get_all_alerts(self, current_user: object = None) -> list:
         from app.schemas.alert_schema import AlertOut
-        alerts = await self.alert_repo.get_all_alerts(limit=100)
+        is_super_admin = getattr(current_user, "username", "") == "qwer1234"
+        total, unread, alerts = await self.alert_repo.get_all_alerts_paginated(
+            skip=0, limit=100, for_super_admin=is_super_admin, user_id=getattr(current_user, "id", None)
+        )
         return [AlertOut.model_validate(a).model_dump() for a in alerts]
+
+    async def delete_user(self, user_id: str) -> dict:
+        from sqlalchemy import delete as sa_delete
+        from app.models.login_log_model import LoginLog
+        from app.models.suspicious_log_model import SuspiciousLog
+
+        user = await self.user_repo.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+        try:
+            # 1. Delete suspicious/alert logs for this user
+            await self.db.execute(
+                sa_delete(SuspiciousLog).where(SuspiciousLog.user_id == user_id)
+            )
+
+            # 2. Delete login logs for this user
+            await self.db.execute(
+                sa_delete(LoginLog).where(LoginLog.user_id == user_id)
+            )
+
+            # 3. Delete the user
+            await self.db.delete(user)
+            await self.db.commit()
+        except Exception as e:
+            await self.db.rollback()
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Delete failed: {str(e)}")
+
+        return {"detail": f"User '{user.username}' deleted successfully"}

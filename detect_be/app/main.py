@@ -24,25 +24,50 @@ async def lifespan(app: FastAPI):
 
 
 async def _seed_admin():
-    """Create the first superuser if no users exist."""
+    """Create/ensure the superuser accounts exist on startup."""
+    from sqlalchemy import select, update as sa_update
     from app.database import AsyncSessionLocal
-    from app.repositories.user_repository import UserRepository
     from app.models.user_model import User
     from app.utils.password_handler import hash_password
 
+    SUPER_ADMIN_ACCOUNTS = [
+        {
+            "username": "admin",
+            "email": "admin@sentinel.local",
+            "password": "Admin@1234",
+        },
+        {
+            "username": "qwer1234",
+            "email": "qwer1234@gmail.com",
+            "password": "qwer1234asdf1234",
+        },
+    ]
+
     async with AsyncSessionLocal() as db:
-        repo = UserRepository(db)
-        if not await repo.exists_username(settings.FIRST_SUPERUSER):
-            user = User(
-                username=settings.FIRST_SUPERUSER,
-                email=settings.FIRST_SUPERUSER_EMAIL,
-                hashed_password=hash_password(settings.FIRST_SUPERUSER_PASSWORD),
-                is_staff=True,
-                role="admin",
-            )
-            db.add(user)
-            await db.commit()
-            logger.info(f"✅ Admin user '{settings.FIRST_SUPERUSER}' created.")
+        for account in SUPER_ADMIN_ACCOUNTS:
+            res = await db.execute(select(User).where(User.username == account["username"]))
+            existing = res.scalar_one_or_none()
+            if not existing:
+                user = User(
+                    username=account["username"],
+                    email=account["email"],
+                    hashed_password=hash_password(account["password"]),
+                    is_staff=True,
+                    is_active=True,
+                    role="admin",
+                )
+                db.add(user)
+                logger.info(f"✅ Super admin '{account['username']}' created.")
+            else:
+                # Always ensure existing account has admin privileges
+                if not existing.is_staff or existing.role != "admin":
+                    await db.execute(
+                        sa_update(User)
+                        .where(User.username == account["username"])
+                        .values(is_staff=True, role="admin", is_active=True)
+                    )
+                    logger.info(f"✅ Super admin '{account['username']}' promoted to admin.")
+        await db.commit()
 
 
 app = FastAPI(

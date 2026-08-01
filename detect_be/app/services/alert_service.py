@@ -19,7 +19,7 @@ class AlertService:
             
         username = user.username
         base_name = username
-        for prefix in ["payment_", "instagram_", "ecommerce_"]:
+        for prefix in ["payment_", "instagram_"]:
             if username.startswith(prefix):
                 base_name = username[len(prefix):]
                 break
@@ -28,7 +28,6 @@ class AlertService:
             base_name,
             f"payment_{base_name}",
             f"instagram_{base_name}",
-            f"ecommerce_{base_name}",
         ]
         
         res = await self.alert_repo.db.execute(
@@ -68,11 +67,13 @@ class AlertService:
         return {"unread_count": count}
 
     async def get_all_alerts(
-        self, page: int = 1, page_size: int = 20
+        self, page: int = 1, page_size: int = 20, current_user: object = None
     ) -> AlertsResponse:
         skip = (page - 1) * page_size
+        is_super_admin = getattr(current_user, "username", "") == "qwer1234"
+        
         total, unread, alerts = await self.alert_repo.get_all_alerts_paginated(
-            skip, page_size
+            skip, page_size, for_super_admin=is_super_admin, user_id=getattr(current_user, "id", None)
         )
         return AlertsResponse(
             total=total,
@@ -80,6 +81,9 @@ class AlertService:
             items=[AlertOut.model_validate(a) for a in alerts],
         )
 
-    async def get_all_unread_count(self) -> dict:
-        count = await self.alert_repo.get_all_unread_count()
+    async def get_all_unread_count(self, current_user: object = None) -> dict:
+        is_super_admin = getattr(current_user, "username", "") == "qwer1234"
+        count = await self.alert_repo.get_all_unread_count(
+            for_super_admin=is_super_admin, user_id=getattr(current_user, "id", None)
+        )
         return {"unread_count": count}

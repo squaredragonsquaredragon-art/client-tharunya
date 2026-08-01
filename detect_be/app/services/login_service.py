@@ -8,15 +8,13 @@ from app.schemas.login_schema import LoginHistoryResponse, LoginLogOut
 _ACTIVITY_TYPE_TO_APP = {
     "apex pay": "payment",
     "instaglance": "instagram",
-    "sentinel store": "ecommerce",
     "payment": "payment",
     "instagram": "instagram",
-    "ecommerce": "ecommerce",
 }
 
 
 def _derive_source_app(activity_type: str, explicit: Optional[str] = None) -> str:
-    if explicit and explicit in ("payment", "instagram", "ecommerce", "system"):
+    if explicit and explicit in ("payment", "instagram", "system"):
         return explicit
     key = activity_type.lower().strip()
     return _ACTIVITY_TYPE_TO_APP.get(key, "system")
@@ -37,7 +35,7 @@ class LoginService:
 
         username = user.username
         base_name = username
-        for prefix in ["payment_", "instagram_", "ecommerce_"]:
+        for prefix in ["payment_", "instagram_"]:
             if username.startswith(prefix):
                 base_name = username[len(prefix):]
                 break
@@ -46,7 +44,6 @@ class LoginService:
             base_name,
             f"payment_{base_name}",
             f"instagram_{base_name}",
-            f"ecommerce_{base_name}",
         ]
         res = await self.login_repo.db.execute(
             select(User.id).where(User.username.in_(target_usernames))
@@ -79,11 +76,16 @@ class LoginService:
         page_size: int = 20,
         source_app: Optional[str] = None,
         event_type: Optional[str] = None,
+        current_user: Optional[object] = None,
     ) -> LoginHistoryResponse:
         """Returns ALL users' logs — used by detect_fe security monitoring dashboard."""
         skip = (page - 1) * page_size
+        
+        # Verify if request is from super admin 'qwer1234'
+        is_super_admin = getattr(current_user, "username", "") == "qwer1234"
+        
         total, logs = await self.login_repo.get_all(
-            skip, page_size, source_app=source_app, event_type=event_type
+            skip, page_size, source_app=source_app, event_type=event_type, for_super_admin=is_super_admin
         )
         return LoginHistoryResponse(
             total=total,
@@ -151,7 +153,7 @@ class LoginService:
         user = res.scalar_one_or_none()
         display_username = user.username if user else ""
         # Strip app prefix for display
-        for prefix in ["payment_", "instagram_", "ecommerce_"]:
+        for prefix in ["payment_", "instagram_"]:
             if display_username.startswith(prefix):
                 display_username = display_username[len(prefix):]
                 break

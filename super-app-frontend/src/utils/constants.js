@@ -1,6 +1,5 @@
 export const NAV_ITEMS = [
   { path: '/', label: 'Home', icon: 'Home' },
-  { path: '/ecommerce', label: 'Store', icon: 'ShoppingBag' },
   { path: '/reels', label: 'Reels', icon: 'Clapperboard' },
   { path: '/payment', label: 'Wallet', icon: 'Wallet' },
   { path: '/messaging', label: 'Chats', icon: 'MessageSquare' },

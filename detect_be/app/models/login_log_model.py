@@ -23,7 +23,7 @@ class LoginLog(Base):
     location: Mapped[str] = mapped_column(String(255), default="Unknown")
     country: Mapped[str] = mapped_column(String(100), default="")
     city: Mapped[str] = mapped_column(String(100), default="")
-    source_app: Mapped[str] = mapped_column(String(20), default="system", index=True)  # payment | instagram | ecommerce | system
+    source_app: Mapped[str] = mapped_column(String(20), default="system", index=True)  # payment | instagram | system
     event_type: Mapped[str] = mapped_column(String(20), default="activity", index=True)  # register | login | failed | activity
     status: Mapped[str] = mapped_column(String(20), default="normal")  # normal | suspicious | blocked
     is_suspicious: Mapped[bool] = mapped_column(Boolean, default=False)

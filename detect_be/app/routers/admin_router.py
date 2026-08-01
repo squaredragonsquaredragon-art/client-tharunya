@@ -40,4 +40,13 @@ async def all_alerts(
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await AdminService(db).get_all_alerts()
+    return await AdminService(db).get_all_alerts(current_user=admin)
+
+
+@router.delete("/users/{user_id}/", summary="Delete a user account (admin)")
+async def delete_user(
+    user_id: str,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await AdminService(db).delete_user(user_id)
