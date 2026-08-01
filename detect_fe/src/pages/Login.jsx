@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
-import { MdEmail, MdLock, MdShield, MdVisibility, MdVisibilityOff } from 'react-icons/md';
-import { FiActivity } from 'react-icons/fi';
+import { MdEmail, MdLock, MdShield, MdVisibility, MdVisibilityOff, MdErrorOutline } from 'react-icons/md';
 
 const Login = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
+  const [authError, setAuthError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
@@ -17,15 +18,25 @@ const Login = () => {
     const e = {};
     if (!form.username.trim()) e.username = 'Username or email is required';
     if (!form.password) e.password = 'Password is required';
-    if (form.password && form.password.length < 6) e.password = 'Password must be at least 6 characters';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setAuthError('');
     if (!validate()) return;
-    await login(form);
+    
+    const res = await login({
+      username: form.username.trim(),
+      password: form.password.trim()
+    });
+
+    if (res?.success) {
+      navigate('/dashboard');
+    } else if (res?.error) {
+      setAuthError(res.error);
+    }
   };
 
   return (
@@ -33,28 +44,39 @@ const Login = () => {
       {/* Logo */}
       <div className="auth-logo">
         <div style={{
-          width: '48px', height: '48px',
-          background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-          borderRadius: '14px',
+          width: '42px', height: '42px',
+          background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+          borderRadius: '12px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 30px rgba(59,130,246,0.4)',
         }}>
-          <MdShield style={{ color: 'white', fontSize: '26px' }} />
+          <MdShield style={{ color: 'white', fontSize: '22px' }} />
         </div>
-        <div>
-          <div style={{
-            fontSize: '1.3rem', fontWeight: 800,
-            background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>SentinelAI</div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--clr-text-muted)', marginTop: '1px' }}>
-            Security Monitor
-          </div>
-        </div>
+        <div style={{
+          fontSize: '1.15rem', fontWeight: 700, color: '#f8fafc'
+        }}>TheftGuard BackOffice</div>
       </div>
 
-      <h1 className="auth-title" style={{ fontSize: '1.4rem' }}>Welcome Back</h1>
-      <p className="auth-subtitle">Sign in to your security dashboard</p>
+      <h1 className="auth-title" style={{ marginTop: '20px' }}>Welcome Back</h1>
+      <p className="auth-subtitle">Sign in to your account</p>
+
+      {/* Auth Error Banner */}
+      {authError && (
+        <div style={{
+          background: 'rgba(239, 68, 68, 0.12)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          borderRadius: '10px',
+          padding: '12px 14px',
+          marginBottom: '18px',
+          color: '#fca5a5',
+          fontSize: '0.85rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}>
+          <MdErrorOutline style={{ fontSize: '20px', flexShrink: 0, color: '#ef4444' }} />
+          <span>{authError}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} noValidate>
         {/* Username */}
@@ -97,7 +119,7 @@ const Login = () => {
                 position: 'absolute', right: '14px', top: '50%',
                 transform: 'translateY(-50%)',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--clr-text-muted)', fontSize: '1rem',
+                color: 'rgba(180,195,220,0.6)', fontSize: '1rem',
                 display: 'flex', alignItems: 'center',
               }}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -108,39 +130,20 @@ const Login = () => {
           {errors.password && <div className="form-error">⚠ {errors.password}</div>}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--clr-accent-blue)', cursor: 'pointer' }}>
-            Forgot password?
-          </span>
-        </div>
-
         <Button type="submit" full isLoading={isLoading} size="lg" id="login-submit-btn">
           Sign In
         </Button>
       </form>
 
       <div className="auth-divider">
-        <span>New to SentinelAI?</span>
+        <span>Don't have an account?</span>
       </div>
 
       <Link to="/register">
         <Button variant="secondary" full size="lg" id="goto-register-btn">
-          Create an Account
+          Create Account
         </Button>
       </Link>
-
-      {/* Demo hint */}
-      <div style={{
-        marginTop: '20px', padding: '12px 16px',
-        background: 'rgba(59,130,246,0.06)',
-        border: '1px solid rgba(59,130,246,0.15)',
-        borderRadius: 'var(--radius-md)',
-        fontSize: '0.8rem', color: 'var(--clr-text-muted)',
-        display: 'flex', alignItems: 'center', gap: '8px'
-      }}>
-        <FiActivity style={{ color: 'var(--clr-accent-blue)', flexShrink: 0 }} />
-        <span>Protected by multi-layer AI anomaly detection & real-time monitoring</span>
-      </div>
     </div>
   );
 };

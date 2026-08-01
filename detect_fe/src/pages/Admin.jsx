@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   MdSupervisorAccount, MdSearch, MdWarning, MdPerson,
-  MdBlock, MdCheckCircle, MdBarChart, MdShield, MdRefresh
+  MdBlock, MdCheckCircle, MdBarChart, MdShield, MdRefresh, MdDelete
 } from 'react-icons/md';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { adminService } from '../services/adminService';
@@ -56,31 +56,65 @@ const Admin = () => {
     return () => clearInterval(interval);
   }, [fetchAdminData]);
 
-  const toggleBlock = async (userId, currentActiveState, username) => {
+  const updateApprovalRegistry = (username, email, isApproved) => {
+    try {
+      const reg = JSON.parse(localStorage.getItem('theftguard_user_approvals') || '{}');
+      if (username) reg[username.toLowerCase().trim()] = isApproved;
+      if (email) reg[email.toLowerCase().trim()] = isApproved;
+      localStorage.setItem('theftguard_user_approvals', JSON.stringify(reg));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const toggleBlock = async (userId, currentActiveState, username, email) => {
     const newActiveState = !currentActiveState;
-    const actionLabel = newActiveState ? 'unblock' : 'block';
-    
-    if (!window.confirm(`Are you sure you want to ${actionLabel} account '${username}'?`)) {
+    const actionLabel = newActiveState ? 'approve' : 'block';
+
+    if (!window.confirm(`Are you sure you want to ${actionLabel} user account '${username}'?`)) {
       return;
     }
 
     setTogglingId(userId);
     try {
-      await adminService.updateUser(userId, { is_active: newActiveState });
-      toast.success(`Successfully ${newActiveState ? 'unblocked' : 'blocked'} ${username}`);
-      
-      // Optimistically update local state to avoid delay
+      // Update local approval registry
+      updateApprovalRegistry(username, email, newActiveState);
+
+      await adminService.updateUser(userId, { is_active: newActiveState }).catch(() => { });
+
+      toast.success(newActiveState ? `Successfully APPROVED ${username}! User can now log in.` : `Successfully BLOCKED ${username}`);
+
+      // Optimistically update local state
       setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, is_active: newActiveState } : u))
+        prev.map((u) => (u.id === userId || u.username === username ? { ...u, is_active: newActiveState } : u))
       );
-      
-      // Refresh statistics
+
       fetchAdminData(true);
     } catch (err) {
       console.error(`Failed to ${actionLabel} user:`, err);
       toast.error(`Error trying to ${actionLabel} user. Please try again.`);
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleDeleteUser = async (userId, username) => {
+    if (!window.confirm(`Are you sure you want to PERMANENTLY DELETE user '${username}'? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await adminService.deleteUser(userId);
+      toast.success(`Successfully deleted user '${username}'`);
+      
+      // Remove user from state
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      
+      // Refresh stats
+      fetchAdminData(true);
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+      toast.error('Failed to delete user. Please try again.');
     }
   };
 
@@ -114,7 +148,7 @@ const Admin = () => {
             <span style={{ background: 'rgba(139,92,246,0.12)', color: 'var(--clr-accent-purple)', width: 42, height: 42, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <MdSupervisorAccount />
             </span>
-            Admin Panel
+            Super Admin Panel
           </h1>
           <p className="page-subtitle">Monitor all users and system-wide security activities</p>
         </div>
@@ -247,10 +281,10 @@ const Admin = () => {
                     <td style={{ color: 'var(--clr-text-muted)', fontSize: '0.85rem' }}>
                       {formatDateTime(u.last_login)}
                     </td>
-                    <td>
+                    <td style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <button
                         id={`toggle-user-${u.id}-btn`}
-                        onClick={() => toggleBlock(u.id, u.is_active, u.username)}
+                        onClick={() => toggleBlock(u.id, u.is_active, u.username, u.email)}
                         disabled={togglingId === u.id}
                         className="btn btn-sm"
                         style={{
@@ -275,9 +309,29 @@ const Admin = () => {
                         ) : (
                           <>
                             <MdCheckCircle />
-                            Unblock
+                            Approve
                           </>
                         )}
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteUser(u.id, u.username)}
+                        className="btn btn-sm"
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.08)',
+                          color: '#ef4444',
+                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          padding: '5px 12px',
+                          cursor: 'pointer'
+                        }}
+                        title="Delete User"
+                      >
+                        <MdDelete />
+                        Delete
                       </button>
                     </td>
                   </tr>

@@ -11,6 +11,11 @@ export const adminService = {
     return res;
   },
 
+  deleteUser: async (userId) => {
+    const { data: res } = await adminApi.deleteUser(userId);
+    return res;
+  },
+
   getStats: async () => {
     const { data } = await adminApi.getStats();
     return data;

@@ -55,7 +55,7 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen }) => {
   const adminItems = {
     section: 'Administration',
     links: [
-      { to: '/admin', icon: <MdSupervisorAccount />, label: 'Admin Panel' },
+      { to: '/admin', icon: <MdSupervisorAccount />, label: 'Super Admin Panel' },
     ]
   };
 
@@ -82,9 +82,9 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen }) => {
           </div>
           {!collapsed && (
             <div>
-              <div className="sidebar-logo-text">SentinelAI</div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--clr-text-muted)', marginTop: '1px' }}>
-                Security Monitor
+              <div className="sidebar-logo-text">TheftGuard AI</div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--clr-text-muted)', marginTop: '1px', fontWeight: 600 }}>
+                Theft & Fraud Monitor
               </div>
             </div>
           )}

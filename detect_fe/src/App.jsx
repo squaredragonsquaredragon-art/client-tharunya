@@ -14,20 +14,20 @@ const App = () => {
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#0f1b2e',
-              color: '#e2e8f0',
-              border: '1px solid rgba(56, 100, 180, 0.25)',
-              borderRadius: '12px',
+              background: '#161e2e',
+              color: '#f1f5f9',
+              border: '1px solid #233044',
+              borderRadius: '10px',
               fontSize: '0.875rem',
               fontFamily: 'Inter, sans-serif',
               padding: '12px 16px',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+              boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
             },
             success: {
-              iconTheme: { primary: '#10b981', secondary: '#0f1b2e' },
+              iconTheme: { primary: '#10b981', secondary: '#161e2e' },
             },
             error: {
-              iconTheme: { primary: '#ef4444', secondary: '#0f1b2e' },
+              iconTheme: { primary: '#ef4444', secondary: '#161e2e' },
             },
           }}
         />
