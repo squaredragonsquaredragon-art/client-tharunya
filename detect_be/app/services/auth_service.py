@@ -242,7 +242,7 @@ class AuthService:
                 last_name=data.last_name,
                 phone_number=data.phone_number,
                 role="user",
-                is_active=False,
+                is_active=True,
             )
             user = await self.user_repo.create(user)
         else:
@@ -261,7 +261,9 @@ class AuthService:
                 first_name=data.first_name,
                 last_name=data.last_name,
                 phone_number=data.phone_number,
-                is_active=False,
+                role="admin",
+                is_staff=True,
+                is_active=False,  # ALL BackOffice admin accounts require Super Admin approval!
             )
             user = await self.user_repo.create(user)
 
@@ -287,11 +289,20 @@ class AuthService:
         )
         await self.login_repo.create(log)
 
-        tokens = self._tokens(user.id)
         user_out = UserOut.model_validate(user).model_dump()
         if model_cls:
             user_out["username"] = data.username
             user_out["email"] = data.email
+
+        if not user.is_active:
+            return {
+                "access": None,
+                "refresh": None,
+                "user": user_out,
+                "message": "Account created successfully. Pending Super Admin approval."
+            }
+
+        tokens = self._tokens(user.id)
         return {**tokens, "user": user_out}
 
     async def login(self, data: LoginSchema, request: Request, app: str = "all") -> dict:
@@ -338,9 +349,16 @@ class AuthService:
                         status.HTTP_403_FORBIDDEN,
                         f"Your account is blocked due to security lockout. Try again in {m} minutes {s} seconds."
                     )
+            elif app != "all" and getattr(target_user, "role", "user") == "user":
+                # Regular users in super-app-frontend do not require super admin approval
+                target_user.is_active = True
+                await self.db.commit()
             else:
-                # Fresh account awaiting approval or admin disabled
-                raise HTTPException(status.HTTP_403_FORBIDDEN, "Super admin still not approved")
+                # All TheftGuard BackOffice admin/staff accounts require Super Admin approval!
+                raise HTTPException(
+                    status.HTTP_403_FORBIDDEN,
+                    "Your account is pending Super Admin approval. Please contact Super Admin (qwer1234)."
+                )
 
         model_cls = None
         if app == "payment":
@@ -382,7 +400,14 @@ class AuthService:
                 raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
 
         if not user.is_active:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Super admin still not approved")
+            if app != "all" and getattr(user, "role", "user") == "user":
+                user.is_active = True
+                await self.db.commit()
+            else:
+                raise HTTPException(
+                    status.HTTP_403_FORBIDDEN,
+                    "Your account is pending Super Admin approval. Please contact Super Admin."
+                )
 
         # Parse device info
         ua_string = request.headers.get("user-agent", "")
@@ -614,15 +639,18 @@ class AuthService:
                 )
             failed_count = count_res.scalar_one()
 
-            # 3. Lockout Rule: If failed attempts are >= 6, deactivate the account (is_active = False)
-            if failed_count >= 6 and not is_nonexistent:
+            # 3. Lockout Rule: If failed attempts are > 5 (i.e. >= 6), deactivate the account and store EXACT location in back office
+            if failed_count > 5 and not is_nonexistent:
                 user = await self.user_repo.get_by_id(user_id)
                 if user and user.is_active:
                     user.is_active = False
-                    log.status = "blocked"
-                    log.location = f"Account deactivated due to >= 6 wrong password attempts. Locked in {location_str}"
+                    await self.user_repo.update(user)
+                log.status = "blocked"
+                log.location = f"EXACT LOCATION CAPTURED: {location_str} (Account Blocked: >5 Failed Attempts)"
+            elif failed_count <= 5:
+                log.location = f"Exact Location: {location_str} (Failed attempt {failed_count}/5)"
 
-            # 4. Alert Trigger Rule: Only generate an alert if they enter wrong password MORE THAN 3 times
+            # 4. Alert Trigger Rule: Generate a suspicious alert when failed attempts exceed threshold (>3 or >5)
             if failed_count > 3:
                 # Check if an unread alert already exists for this user account (One Alert Per Account)
                 existing_alert = await self.db.execute(
@@ -633,11 +661,12 @@ class AuthService:
                 )
                 
                 if existing_alert.scalar_one_or_none() is None:
-                    desc_text = (
-                        f"Blocked unauthorized access attempt targeting nonexistent user '{identifier}' on the {app.capitalize() if app != 'all' else 'System'} app. Originating from {location_str}."
-                        if is_nonexistent else
-                        f"Blocked unauthorized access attempt targeting user '{identifier}' on the {app.capitalize() if app != 'all' else 'System'} app using incorrect credentials. Originating from {location_str}."
-                    )
+                    if failed_count > 5:
+                        desc_text = f"CRITICAL ALERT: User '{identifier}' exceeded 5 failed login attempts ({failed_count} attempts). Account deactivated. Originating from {location_str}."
+                    elif is_nonexistent:
+                        desc_text = f"Blocked unauthorized access attempt targeting nonexistent user '{identifier}' on the {app.capitalize() if app != 'all' else 'System'} app. Originating from {location_str}."
+                    else:
+                        desc_text = f"Blocked unauthorized access attempt targeting user '{identifier}' on the {app.capitalize() if app != 'all' else 'System'} app using incorrect credentials. Originating from {location_str}."
 
                     ai_report = await generate_ai_analysis(
                         ip_address=ip,

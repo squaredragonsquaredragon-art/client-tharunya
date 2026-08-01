@@ -28,21 +28,22 @@ async def get_current_user(
 
     token = credentials.credentials
 
-    # Static Super Admin token — bypass JWT, return a synthetic admin user
+    # Static Super Admin token — bypass JWT, return Super Admin defined in settings
     if _is_super_admin_token(token):
         from sqlalchemy import select
-        # Try to find an existing admin/staff user in DB
-        res = await db.execute(select(User).where(User.role == "admin").limit(1))
-        admin_user = res.scalar_one_or_none()
-        if admin_user:
-            # Force is_staff=True so get_admin_user passes
-            admin_user.is_staff = True
-            return admin_user
+        from app.config import settings
+        super_name = settings.FIRST_SUPERUSER or "qwer1234"
+        res = await db.execute(select(User).where(User.username == super_name))
+        super_admin_user = res.scalar_one_or_none()
+        if super_admin_user:
+            super_admin_user.is_staff = True
+            super_admin_user.is_active = True
+            return super_admin_user
         # Fallback: return an in-memory admin object (not persisted)
         synthetic = User.__new__(User)
         synthetic.id = "super-admin-static-id"
-        synthetic.username = "qwer1234"
-        synthetic.email = "admin@theftguard.ai"
+        synthetic.username = super_name
+        synthetic.email = settings.FIRST_SUPERUSER_EMAIL or "admin@sentinel.local"
         synthetic.role = "admin"
         synthetic.is_active = True
         synthetic.is_staff = True
@@ -67,7 +68,10 @@ async def get_current_user(
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is disabled")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is pending Super Admin approval. Please contact Super Admin (qwer1234)."
+        )
     return user
 
 

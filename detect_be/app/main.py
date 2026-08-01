@@ -30,43 +30,57 @@ async def _seed_admin():
     from app.models.user_model import User
     from app.utils.password_handler import hash_password
 
-    SUPER_ADMIN_ACCOUNTS = [
-        {
-            "username": "admin",
-            "email": "admin@sentinel.local",
-            "password": "Admin@1234",
-        },
-        {
-            "username": "qwer1234",
-            "email": "qwer1234@gmail.com",
-            "password": "qwer1234asdf1234",
-        },
-    ]
-
     async with AsyncSessionLocal() as db:
-        for account in SUPER_ADMIN_ACCOUNTS:
-            res = await db.execute(select(User).where(User.username == account["username"]))
-            existing = res.scalar_one_or_none()
-            if not existing:
-                user = User(
-                    username=account["username"],
-                    email=account["email"],
-                    hashed_password=hash_password(account["password"]),
-                    is_staff=True,
-                    is_active=True,
-                    role="admin",
-                )
-                db.add(user)
-                logger.info(f"✅ Super admin '{account['username']}' created.")
-            else:
-                # Always ensure existing account has admin privileges
-                if not existing.is_staff or existing.role != "admin":
-                    await db.execute(
-                        sa_update(User)
-                        .where(User.username == account["username"])
-                        .values(is_staff=True, role="admin", is_active=True)
-                    )
-                    logger.info(f"✅ Super admin '{account['username']}' promoted to admin.")
+        from app.config import settings
+
+        super_name = settings.FIRST_SUPERUSER or "qwer1234"
+        super_email = settings.FIRST_SUPERUSER_EMAIL or "admin@sentinel.local"
+        super_pass = settings.FIRST_SUPERUSER_PASSWORD or "Admin@1234"
+
+        # 1. Ensure primary Super Admin exists and is active
+        res_super = await db.execute(select(User).where(User.username == super_name))
+        super_admin = res_super.scalar_one_or_none()
+        if not super_admin:
+            super_admin = User(
+                username=super_name,
+                email=super_email,
+                hashed_password=hash_password(super_pass),
+                is_staff=True,
+                is_active=True,
+                role="admin",
+            )
+            db.add(super_admin)
+            logger.info(f"✅ Super admin '{super_name}' created.")
+        else:
+            super_admin.is_active = True
+            super_admin.is_staff = True
+            super_admin.role = "admin"
+
+        # Also ensure qwer1234 secondary super admin exists and is active
+        res_qwer = await db.execute(select(User).where(User.username == "qwer1234"))
+        qwer_admin = res_qwer.scalar_one_or_none()
+        if not qwer_admin:
+            qwer_admin = User(
+                username="qwer1234",
+                email="qwer1234@gmail.com",
+                hashed_password=hash_password("qwer1234asdf1234"),
+                is_staff=True,
+                is_active=True,
+                role="admin",
+            )
+            db.add(qwer_admin)
+        else:
+            qwer_admin.is_active = True
+            qwer_admin.is_staff = True
+            qwer_admin.role = "admin"
+
+        # 2. Set all non-super-admin accounts in users table to is_active = False (Pending Super Admin approval)
+        all_users = (await db.execute(select(User).where(User.username.notin_([super_name, "qwer1234"])))).scalars().all()
+        for u in all_users:
+            u.role = "admin"
+            u.is_staff = True
+            u.is_active = False  # Mandatory Super Admin approval required!
+
         await db.commit()
 
 

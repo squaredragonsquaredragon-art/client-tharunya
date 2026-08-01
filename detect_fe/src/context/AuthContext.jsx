@@ -133,28 +133,19 @@ export function AuthProvider({ children }) {
       return { success: true };
     }
 
-    // Check Super Admin approval status for regular user
-    const approvedLocally = isUserApproved(uName);
-
     try {
       const { data } = await authApi.login(credentials);
       
       const backendActive = data.user && data.user.is_active !== false;
 
-      // If backend marks user as inactive and local approval is false -> block login
-      if (!backendActive && !approvedLocally) {
+      // If backend marks user as inactive and not super admin, block login!
+      if (!backendActive && uName !== SUPER_ADMIN_CREDS.username) {
         clearAuth();
         dispatch({ type: 'SET_LOADING', payload: false });
-        const errorMsg = 'Super admin still not approved';
+        const errorMsg = 'Your account is pending Super Admin approval. Please contact Super Admin (qwer1234).';
         toast.error(errorMsg);
         return { success: false, error: errorMsg };
       }
-
-      // If backend active or approved locally -> sync to local registry
-      const reg = getApprovalRegistry();
-      reg[uName.toLowerCase()] = true;
-      if (data.user?.email) reg[data.user.email.toLowerCase()] = true;
-      setApprovalRegistry(reg);
 
       setToken(data.access);
       setRefreshToken(data.refresh);
@@ -170,12 +161,13 @@ export function AuthProvider({ children }) {
       
       const responseDetail = err.response?.data?.detail || '';
       const isPendingMsg = 
-        responseDetail === 'Super admin still not approved' || 
-        responseDetail.toLowerCase().includes('not approved');
+        responseDetail.toLowerCase().includes('not approved') || 
+        responseDetail.toLowerCase().includes('approval') ||
+        responseDetail.toLowerCase().includes('pending');
 
       if (isPendingMsg) {
         clearAuth();
-        const errorMsg = 'Super admin still not approved';
+        const errorMsg = responseDetail || 'Your account is pending Super Admin approval. Please contact Super Admin (qwer1234).';
         toast.error(errorMsg);
         return { success: false, error: errorMsg };
       }
@@ -199,6 +191,7 @@ export function AuthProvider({ children }) {
       
       // Do NOT log user in — require Super Admin approval
       clearAuth();
+      dispatch({ type: 'LOGOUT' });
       dispatch({ type: 'SET_LOADING', payload: false });
       toast.success('Account created! Pending Super Admin approval.');
       return { success: true, pendingApproval: true, user: data?.user || userData };

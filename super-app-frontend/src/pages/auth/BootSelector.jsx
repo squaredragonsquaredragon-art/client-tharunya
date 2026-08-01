@@ -1,13 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
-import { ShieldCheck, Wallet, Clapperboard } from 'lucide-react';
+import { Shield, Wallet, Clapperboard, ArrowRight, Lock, Zap } from 'lucide-react';
 
 const BootSelector = () => {
   const navigate = useNavigate();
 
   const handleSelectApp = (appType) => {
-    // Save target app in localStorage
     localStorage.setItem('sentinel_active_app', appType);
     navigate('/login');
   };
@@ -16,20 +14,24 @@ const BootSelector = () => {
     {
       type: 'payment',
       name: 'Apex Pay',
-      desc: 'Secure high-end digital wallet & financial ledger operations console.',
-      icon: <Wallet size={36} color="hsl(var(--accent-green))" />,
-      glow: '0 0 30px rgba(0, 230, 118, 0.15)',
-      borderColor: 'hsla(var(--accent-green), 0.15)',
-      themeClass: 'theme-pay'
+      subtitle: 'FINANCIAL WALLET PORTAL',
+      desc: 'Secure digital wallet, instant money transfers & decentralized ledger operations console.',
+      icon: <Wallet size={28} color="#10b981" />,
+      accent: '#10b981',
+      bgGlow: 'rgba(16, 185, 129, 0.12)',
+      borderColor: 'rgba(16, 185, 129, 0.25)',
+      badgeText: 'Decentralized Vault',
     },
     {
       type: 'instagram',
       name: 'InstaGlance',
-      desc: 'Encrypted social media network. View short reels & active chat logs.',
-      icon: <Clapperboard size={36} color="hsl(var(--accent-purple))" />,
-      glow: '0 0 30px rgba(189, 0, 255, 0.15)',
-      borderColor: 'hsla(var(--accent-purple), 0.15)',
-      themeClass: 'theme-social'
+      subtitle: 'SOCIAL MEDIA & REELS PORTAL',
+      desc: 'Encrypted social media network. Watch short video reels, post stories & direct chat logs.',
+      icon: <Clapperboard size={28} color="#a855f7" />,
+      accent: '#a855f7',
+      bgGlow: 'rgba(168, 85, 247, 0.12)',
+      borderColor: 'rgba(168, 85, 247, 0.25)',
+      badgeText: 'Encrypted Stream',
     },
   ];
 
@@ -42,132 +44,180 @@ const BootSelector = () => {
         justifyContent: 'center',
         minHeight: '100vh',
         width: '100vw',
-        background: 'radial-gradient(circle at center, #0c0f16 0%, #020408 100%)',
-        padding: '24px',
+        background: 'radial-gradient(ellipse at 50% 30%, #0f172a 0%, #030712 100%)',
+        padding: '32px 20px',
         position: 'relative',
+        boxSizing: 'border-box',
         overflow: 'hidden'
       }}
     >
-      {/* Static glow panels — no blur filter or animation (was blur(50px) + float, very heavy) */}
+      {/* Background ambient lighting */}
       <div
         style={{
           position: 'absolute',
-          width: '600px',
-          height: '600px',
+          width: '500px',
+          height: '500px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0, 240, 255, 0.04) 0%, transparent 65%)',
-          top: '-15%',
-          left: '-15%',
+          background: 'radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, transparent 70%)',
+          top: '-10%',
+          left: '20%',
           pointerEvents: 'none'
         }}
       />
       <div
         style={{
           position: 'absolute',
-          width: '600px',
-          height: '600px',
+          width: '500px',
+          height: '500px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(189, 0, 255, 0.04) 0%, transparent 65%)',
-          bottom: '-15%',
-          right: '-15%',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 70%)',
+          bottom: '-10%',
+          right: '20%',
           pointerEvents: 'none'
         }}
       />
 
-      <div style={{ textAlign: 'center', marginBottom: '40px', zIndex: 10 }} className="animate-fade-in">
+      {/* Header section */}
+      <div style={{ textAlign: 'center', marginBottom: '36px', zIndex: 10 }}>
         <div
           style={{
             display: 'inline-flex',
-            padding: '12px',
-            borderRadius: 'var(--border-radius-md)',
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            marginBottom: '16px',
-            boxShadow: 'var(--glass-shadow)'
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '52px',
+            height: '52px',
+            borderRadius: '16px',
+            background: 'rgba(56, 189, 248, 0.1)',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            marginBottom: '14px',
+            boxShadow: '0 0 25px rgba(56, 189, 248, 0.2)'
           }}
         >
-          <ShieldCheck size={32} color="hsl(var(--accent-cyan))" style={{ animation: 'spinSlow 16s linear infinite', willChange: 'transform' }} />
+          <Shield size={28} color="#38bdf8" />
         </div>
-        <h1 style={{ fontSize: '36px', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-          Anu<span className="text-gradient-cyan">AI</span>
+        <h1 style={{ fontSize: '34px', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', color: '#f8fafc' }}>
+          SENTINEL<span style={{ color: '#38bdf8' }}> AI</span>
         </h1>
-        <p style={{ color: 'hsl(var(--text-secondary))', fontSize: '14px', marginTop: '6px', maxWidth: '460px', lineHeight: 1.6 }}>
-          Select secure micro-application gateway node. Separate credentials and datastores apply.
+        <p style={{ color: '#94a3b8', fontSize: '13px', marginTop: '6px', maxWidth: '440px', lineHeight: 1.6 }}>
+          Select secure micro-application gateway node. Isolated database tables and end-to-end encryption apply.
         </p>
       </div>
 
-      {/* Grid selector cards */}
+      {/* App Cards */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 320px))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 320px))',
           gap: '24px',
           zIndex: 10,
           width: '100%',
           maxWidth: '680px',
           justifyContent: 'center'
         }}
-        className="animate-slide-up"
       >
         {apps.map((app) => (
           <div
             key={app.type}
             onClick={() => handleSelectApp(app.type)}
-            className="glass-card"
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '20px',
+              gap: '18px',
               cursor: 'pointer',
+              background: 'rgba(15, 23, 42, 0.6)',
               border: `1px solid ${app.borderColor}`,
-              boxShadow: app.glow,
-              padding: '32px 24px',
-              transition: 'all var(--transition-normal)'
+              boxShadow: `0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05)`,
+              borderRadius: '20px',
+              padding: '28px 24px',
+              transition: 'all 0.25s ease',
+              backdropFilter: 'blur(12px)',
+              position: 'relative',
+              overflow: 'hidden'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+              e.currentTarget.style.borderColor = app.accent;
+              e.currentTarget.style.boxShadow = `0 16px 40px ${app.bgGlow}, inset 0 1px 1px rgba(255, 255, 255, 0.1)`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'none';
               e.currentTarget.style.borderColor = app.borderColor;
+              e.currentTarget.style.boxShadow = `0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05)`;
             }}
           >
-            <div
-              style={{
-                display: 'inline-flex',
-                padding: '16px',
-                borderRadius: 'var(--border-radius-md)',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                width: 'fit-content'
-              }}
-            >
-              {app.icon}
+            {/* Top row with badge */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '12px',
+                  background: app.bgGlow,
+                  border: `1px solid ${app.borderColor}`
+                }}
+              >
+                {app.icon}
+              </div>
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  color: app.accent,
+                  background: app.bgGlow,
+                  border: `1px solid ${app.borderColor}`,
+                  padding: '3px 8px',
+                  borderRadius: '12px',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase'
+                }}
+              >
+                {app.badgeText}
+              </span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0 }}>{app.name}</h2>
-              <p style={{ color: 'hsl(var(--text-secondary))', fontSize: '13px', lineHeight: 1.6, margin: 0 }}>
+            {/* Content */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 800, color: app.accent, letterSpacing: '0.08em' }}>
+                {app.subtitle}
+              </div>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                {app.name}
+              </h2>
+              <p style={{ color: '#94a3b8', fontSize: '12.5px', lineHeight: 1.55, margin: '2px 0 0' }}>
                 {app.desc}
               </p>
             </div>
 
+            {/* Action button */}
             <div
               style={{
                 marginTop: 'auto',
+                paddingTop: '12px',
+                borderTop: '1px solid rgba(255, 255, 255, 0.05)',
                 fontSize: '13px',
                 fontWeight: 700,
-                color: 'hsl(var(--accent-cyan))',
+                color: app.accent,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                justifyContent: 'space-between'
               }}
             >
-              Boot Gateway →
+              <span>Launch Application</span>
+              <ArrowRight size={16} />
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Footer info */}
+      <div style={{ marginTop: '36px', textAlign: 'center', zIndex: 10 }}>
+        <span style={{ fontSize: '11px', color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <Lock size={12} color="#64748b" />
+          Protected by Sentinel AI Security Core & Automated Intrusion Protection
+        </span>
       </div>
     </div>
   );

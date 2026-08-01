@@ -27,34 +27,15 @@ const AuthLayout = () => {
         className="glass-card"
         style={{
           width: '100%',
-          maxWidth: '460px',
+          maxWidth: '500px',
           zIndex: 10,
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: 'var(--glass-shadow)',
-          borderRadius: 'var(--border-radius-lg)',
-          padding: '40px 32px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1)',
+          borderRadius: '20px',
+          padding: '24px 26px',
+          backdropFilter: 'blur(16px)',
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              padding: '12px',
-              borderRadius: 'var(--border-radius-md)',
-              background: 'rgba(0, 240, 255, 0.06)',
-              border: '1px solid hsla(var(--accent-cyan), 0.2)',
-              marginBottom: '16px',
-              boxShadow: 'var(--neon-glow-cyan)',
-            }}
-          >
-            <Shield size={32} color="hsl(var(--accent-cyan))" />
-          </div>
-          <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>SENTINEL<span className="text-gradient-cyan">AI</span></h1>
-          <p style={{ color: 'hsl(var(--text-secondary))', fontSize: '13px', lineHeight: 1.6 }}>
-            Autonomous login intelligence & secure user validation console.
-          </p>
-        </div>
-
         <Outlet />
       </div>
     </div>

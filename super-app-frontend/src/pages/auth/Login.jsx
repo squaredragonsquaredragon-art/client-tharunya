@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useNotification } from '../../context/NotificationContext';
-import { Mail, Lock, LogIn, ShieldAlert, Wallet, Clapperboard, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, LogIn, Wallet, Clapperboard, ArrowLeft, Shield } from 'lucide-react';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -33,7 +33,6 @@ const Login = () => {
         return;
       }
 
-      // Route directly to the respective App Front Page!
       if (activeApp === 'payment') {
         navigate('/payment');
       } else if (activeApp === 'instagram') {
@@ -57,29 +56,29 @@ const Login = () => {
       case 'payment':
         return {
           title: 'APEX PAY',
-          subtitle: 'Secure Decentralized Capital Ledger',
-          icon: <Wallet size={28} color="hsl(var(--accent-green))" />,
-          accent: 'hsl(var(--accent-green))',
-          glow: '0 0 20px rgba(0, 230, 118, 0.2)',
-          buttonClass: 'btn-primary', // uses primary gradient
+          subtitle: 'Secure Decentralized Capital Portal',
+          icon: <Wallet size={22} color="#10b981" />,
+          accent: '#10b981',
+          glow: '0 0 20px rgba(16, 185, 129, 0.25)',
+          btnBg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         };
       case 'instagram':
         return {
           title: 'INSTAGLANCE',
-          subtitle: 'Secure Peer Reels & Chat Stream',
-          icon: <Clapperboard size={28} color="hsl(var(--accent-purple))" />,
-          accent: 'hsl(var(--accent-purple))',
-          glow: '0 0 20px rgba(189, 0, 255, 0.2)',
-          buttonClass: 'btn-premium', // uses premium gradient
+          subtitle: 'Secure Peer Media & Social Stream',
+          icon: <Clapperboard size={22} color="#a855f7" />,
+          accent: '#a855f7',
+          glow: '0 0 20px rgba(168, 85, 247, 0.25)',
+          btnBg: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)',
         };
       default:
         return {
-          title: 'SENTINELAI',
-          subtitle: 'Secure Multi-App Dashboard Access',
-          icon: <LogIn size={28} color="hsl(var(--accent-cyan))" />,
-          accent: 'hsl(var(--accent-cyan))',
-          glow: 'var(--neon-glow-cyan)',
-          buttonClass: 'btn-primary',
+          title: 'SENTINEL AI',
+          subtitle: 'Multi-App Authentication Console',
+          icon: <Shield size={22} color="#38bdf8" />,
+          accent: '#38bdf8',
+          glow: '0 0 20px rgba(56, 189, 248, 0.25)',
+          btnBg: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
         };
     }
   };
@@ -87,55 +86,68 @@ const Login = () => {
   const style = getAppStyle();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <button
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          color: 'hsl(var(--text-muted))',
-          fontSize: '12px',
-          fontWeight: 600,
-          marginBottom: '10px'
-        }}
-        onClick={() => {
-          localStorage.removeItem('sentinel_active_app');
-          window.location.href = '/';
-        }}
-      >
-        <ArrowLeft size={14} />
-        Back to App Portal
-      </button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* Top Back Navigation */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '6px',
+            padding: '4px 10px',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            color: '#94a3b8',
+            fontSize: '11px',
+            fontWeight: 600,
+            transition: 'all 0.2s ease',
+          }}
+          onClick={() => {
+            localStorage.removeItem('sentinel_active_app');
+            window.location.href = '/';
+          }}
+        >
+          <ArrowLeft size={12} />
+          Portal
+        </button>
+        <span style={{ fontSize: '10px', color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          Secure Authentication
+        </span>
+      </div>
 
-      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', margin: '2px 0 6px' }}>
         <div
           style={{
             display: 'inline-flex',
-            padding: '10px',
-            borderRadius: 'var(--border-radius-sm)',
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            marginBottom: '12px',
-            boxShadow: style.glow
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '42px',
+            height: '42px',
+            borderRadius: '12px',
+            background: `${style.accent}15`,
+            border: `1px solid ${style.accent}35`,
+            marginBottom: '8px',
+            boxShadow: style.glow,
           }}
         >
           {style.icon}
         </div>
-        <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0 }}>
-          {style.title} <span style={{ fontSize: '12px', color: style.accent, verticalAlign: 'super' }}>Access Portal</span>
+        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: '#f8fafc' }}>
+          {style.title}
         </h2>
-        <p style={{ color: 'hsl(var(--text-secondary))', fontSize: '13px', marginTop: '4px' }}>
+        <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '3px', marginBottom: 0 }}>
           {style.subtitle}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--text-secondary))' }}>
-            Username or Node Email
+      {/* Form */}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Username or Email
           </label>
           <div style={{ position: 'relative' }}>
             <input
@@ -144,22 +156,34 @@ const Login = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter credentials..."
-              style={{ paddingLeft: '44px' }}
+              style={{
+                paddingLeft: '38px',
+                height: '40px',
+                fontSize: '13px',
+                borderRadius: '8px',
+                background: 'rgba(15, 23, 42, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#fff',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
               disabled={loading}
               required
             />
             <Mail
-              size={16}
-              color="hsl(var(--text-muted))"
-              style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }}
+              size={15}
+              color="#64748b"
+              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
             />
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--text-secondary))' }}>
-            Security Passphrase
-          </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Password
+            </label>
+          </div>
           <div style={{ position: 'relative' }}>
             <input
               type="password"
@@ -167,31 +191,58 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              style={{ paddingLeft: '44px' }}
+              style={{
+                paddingLeft: '38px',
+                height: '40px',
+                fontSize: '13px',
+                borderRadius: '8px',
+                background: 'rgba(15, 23, 42, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#fff',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
               disabled={loading}
               required
             />
             <Lock
-              size={16}
-              color="hsl(var(--text-muted))"
-              style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }}
+              size={15}
+              color="#64748b"
+              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
             />
           </div>
         </div>
 
         <button
           type="submit"
-          className={`btn ${style.buttonClass}`}
-          style={{ width: '100%', marginTop: '10px', boxShadow: style.glow }}
+          style={{
+            width: '100%',
+            height: '42px',
+            marginTop: '4px',
+            borderRadius: '8px',
+            background: style.btnBg,
+            border: 'none',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: '13px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            boxShadow: style.glow,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            transition: 'all 0.2s ease',
+          }}
           disabled={loading}
         >
-          {loading ? 'Validating credentials...' : 'Unlock Node Session'}
+          <LogIn size={16} />
+          {loading ? 'Authenticating...' : 'Sign In'}
         </button>
 
-        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px', color: 'hsl(var(--text-muted))' }}>
-          New node user?{' '}
-          <Link to="/register" style={{ color: style.accent, fontWeight: 700 }}>
-            Create secure credentials
+        <div style={{ textAlign: 'center', marginTop: '4px', fontSize: '12px', color: '#94a3b8' }}>
+          New user?{' '}
+          <Link to="/register" style={{ color: style.accent, fontWeight: 700, textDecoration: 'none' }}>
+            Create Account
           </Link>
         </div>
       </form>

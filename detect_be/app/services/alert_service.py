@@ -19,7 +19,7 @@ class AlertService:
             
         username = user.username
         base_name = username
-        for prefix in ["payment_", "instagram_"]:
+        for prefix in ["payment_", "instagram_", "ecommerce_"]:
             if username.startswith(prefix):
                 base_name = username[len(prefix):]
                 break
@@ -28,6 +28,7 @@ class AlertService:
             base_name,
             f"payment_{base_name}",
             f"instagram_{base_name}",
+            f"ecommerce_{base_name}",
         ]
         
         res = await self.alert_repo.db.execute(
