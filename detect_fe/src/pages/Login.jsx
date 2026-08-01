@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
 import { MdEmail, MdLock, MdShield, MdVisibility, MdVisibilityOff, MdErrorOutline } from 'react-icons/md';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -26,7 +27,7 @@ const Login = () => {
     e.preventDefault();
     setAuthError('');
     if (!validate()) return;
-    
+
     const res = await login({
       username: form.username.trim(),
       password: form.password.trim()
@@ -36,6 +37,7 @@ const Login = () => {
       navigate('/dashboard');
     } else if (res?.error) {
       setAuthError(res.error);
+      toast.error(res.error);
     }
   };
 

@@ -125,8 +125,8 @@ const Alerts = () => {
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const data = await alertService.getAlerts(1, 100);
-      const mapped = data.items.map(a => {
+      const data = await alertService.getAlerts(1, 100).catch(() => null);
+      const mapped = (data?.items || []).map(a => {
         const meta = getAlertMeta(a.alert_type);
         return {
           ...a,
@@ -134,13 +134,13 @@ const Alerts = () => {
           title: meta.title,
           icon: meta.icon,
           iconColor: meta.iconColor,
-          time: new Date(a.created_at).toLocaleString(),
+          time: a.created_at ? new Date(a.created_at).toLocaleString() : '—',
           type: a.alert_type,
         };
       });
       setAlerts(mapped);
-      setTotal(data.total);
-      setUnreadTotal(data.unread);
+      setTotal(data?.total || 0);
+      setUnreadTotal(data?.unread || 0);
     } catch (err) {
       console.error('Failed to fetch alerts:', err);
     } finally {
@@ -193,10 +193,6 @@ const Alerts = () => {
       portalName = 'InstaGlance';
       portalIcon = <MdCameraAlt />;
       themeColor = 'var(--clr-accent-purple)';
-    } else if (alert.location === 'ecommerce') {
-      portalName = 'Sentinel Store';
-      portalIcon = <MdShoppingCart />;
-      themeColor = 'var(--clr-accent-cyan)';
     }
 
     return { targetUser, isNonexistent, portalName, portalIcon, themeColor, originLocation };
@@ -246,12 +242,11 @@ const Alerts = () => {
       </div>
 
       {/* Submodule Segregation Dashboard Tabs */}
-      <div className="grid-cols-4" style={{ marginBottom: '24px' }}>
+      <div className="grid-cols-3" style={{ marginBottom: '24px' }}>
         {[
           { id: 'all', label: 'All Threats', count: alerts.length, color: 'var(--clr-accent-blue)', bg: 'rgba(59,130,246,0.1)', icon: <MdSecurity /> },
           { id: 'payment', label: 'Apex Pay Attacks', count: alerts.filter(a => a.location === 'payment').length, color: 'var(--clr-accent-green)', bg: 'rgba(16,185,129,0.1)', icon: <MdPayment /> },
           { id: 'instagram', label: 'InstaGlance Attacks', count: alerts.filter(a => a.location === 'instagram').length, color: 'var(--clr-accent-purple)', bg: 'rgba(139,92,246,0.1)', icon: <MdCameraAlt /> },
-          { id: 'ecommerce', label: 'Sentinel Store Attacks', count: alerts.filter(a => a.location === 'ecommerce').length, color: 'var(--clr-accent-cyan)', bg: 'rgba(6,182,212,0.1)', icon: <MdShoppingCart /> },
         ].map((tab) => (
           <div
             key={tab.id}

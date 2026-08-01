@@ -6,7 +6,7 @@ export const dashboardService = {
     return data;
   },
 
-  // sourceApp: 'all' | 'payment' | 'instagram' | 'ecommerce' | 'system'
+  // sourceApp: 'all' | 'payment' | 'instagram' | 'system'
   // eventType: 'all' | 'register' | 'login' | 'failed' | 'activity'
   async getHistory(page = 1, pageSize = 20, sourceApp = null, eventType = null) {
     const { data } = await dashboardApi.getHistory(page, pageSize, sourceApp, eventType);

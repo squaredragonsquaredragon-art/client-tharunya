@@ -10,6 +10,13 @@ import { dashboardService } from '../services/dashboardService';
 import { adminService } from '../services/adminService';
 import toast from 'react-hot-toast';
 
+const riskColors = {
+  low: 'badge-normal',
+  medium: 'badge-warning',
+  high: 'badge-suspicious',
+  critical: 'badge-suspicious',
+};
+
 const ITEMS_PER_PAGE = 12;
 
 // Module tabs
@@ -17,7 +24,6 @@ const APP_TABS = [
   { id: 'all', label: 'All Apps', icon: <MdLanguage />, color: 'var(--clr-accent-blue)' },
   { id: 'payment', label: 'Apex Pay', icon: <MdPayment />, color: 'var(--clr-accent-green)' },
   { id: 'instagram', label: 'InstaGlance', icon: <MdCameraAlt />, color: 'var(--clr-accent-purple)' },
-  { id: 'ecommerce', label: 'Sentinel Store', icon: <MdShoppingCart />, color: 'var(--clr-accent-cyan)' },
 ];
 
 // Event type sub-filters
@@ -33,7 +39,6 @@ const EVENT_FILTERS = [
 const APP_META = {
   payment: { color: 'var(--clr-accent-green)', icon: <MdPayment />, label: 'Apex Pay' },
   instagram: { color: 'var(--clr-accent-purple)', icon: <MdCameraAlt />, label: 'InstaGlance' },
-  ecommerce: { color: 'var(--clr-accent-cyan)', icon: <MdShoppingCart />, label: 'Sentinel Store' },
   system: { color: 'var(--clr-accent-blue)', icon: <MdSecurity />, label: 'System' },
   unknown: { color: 'var(--clr-text-muted)', icon: <MdLanguage />, label: 'Unknown' },
 };
@@ -304,18 +309,18 @@ This action is irreversible and will delete all matching database records!`;
                     background: 'rgba(245, 158, 11, 0.15)', color: 'var(--clr-accent-amber)',
                     border: '1px solid rgba(245, 158, 11, 0.3)'
                   }}>
-                    {bu.username[0].toUpperCase()}
+                    {(bu.username ? bu.username[0] : 'U').toUpperCase()}
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--clr-text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                      {bu.username}
+                      {bu.username || 'User'}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--clr-text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                      {bu.email}
+                      {bu.email || ''}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                       <span className={`badge ${riskColors[bu.risk_level] || 'badge-normal'}`} style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
-                        {bu.risk_level.toUpperCase()} RISK
+                        {(bu.risk_level || 'low').toUpperCase()} RISK
                       </span>
                       <span style={{ fontSize: '0.7rem', color: 'var(--clr-text-muted)' }}>
                         {bu.total_logins} logins
@@ -460,7 +465,7 @@ This action is irreversible and will delete all matching database records!`;
                   transition: 'all 0.2s ease',
                 }}
               >
-                {s.charAt(0).toUpperCase() + s.slice(1)}
+                {(s || '').charAt(0).toUpperCase() + (s || '').slice(1)}
               </button>
             ))}
           </div>
@@ -636,18 +641,25 @@ This action is irreversible and will delete all matching database records!`;
 
                     {/* Username */}
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <div style={{
-                          width: '26px', height: '26px', borderRadius: '50%',
-                          background: `${meta.color}20`, color: meta.color,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '0.75rem', fontWeight: 800, flexShrink: 0
-                        }}>
-                          {displayUser.charAt(0).toUpperCase()}
-                        </div>
-                        <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--clr-text-primary)' }}>
-                          {displayUser}
-                        </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {(() => {
+                          const displayUser = row.username || (row.user_id ? row.user_id.substring(0, 8) + '…' : 'User');
+                          return (
+                            <>
+                              <div style={{
+                                width: '26px', height: '26px', borderRadius: '50%',
+                                background: `${meta.color}20`, color: meta.color,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '0.75rem', fontWeight: 800, flexShrink: 0
+                              }}>
+                                {(displayUser || 'U').charAt(0).toUpperCase()}
+                              </div>
+                              <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--clr-text-primary)' }}>
+                                {displayUser}
+                              </span>
+                            </>
+                          );
+                        })()}
                       </div>
                     </td>
 
